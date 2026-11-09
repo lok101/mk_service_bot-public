@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Со склада{% endblock %}
+{% block page_title %}Вывод со склада {{ machine_id }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/machines">← Парк</a></p>
+
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+
+  <form method="post" action="/admin/machines/{{ machine_id }}/place" id="master-place-form">
+    <label>
+      <input type="checkbox" name="create_new_location" value="on" {% if create_new_location %}checked{% endif %}>
+      Создать новую точку
+    </label>
+    <label>Id существующей точки
+      <input name="location_id" value="{{ location_id or '' }}">
+    </label>
+    <label>Название
+      <input name="name" value="{{ name or '' }}">
+    </label>
+    <label>Город
+      <input name="city" value="{{ city or '' }}">
+    </label>
+    <label>Улица
+      <input name="street" value="{{ street or '' }}">
+    </label>
+    <label>Дом
+      <input name="house" value="{{ house or '' }}">
+    </label>
+    <label>Широта
+      <input name="latitude" value="{{ latitude or '' }}">
+    </label>
+    <label>Долгота
+      <input name="longitude" value="{{ longitude or '' }}">
+    </label>
+    {% call admin_save_bar() %}
+        <button type="submit">Разместить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

@@ -1,0 +1,10 @@
+id: no-os-getenv-outside-config
+language: python
+severity: error
+message: os.getenv belongs in src/config.
+files:
+  - src/**/*.py
+ignores:
+  - src/config/**/*.py
+rule:
+  pattern: os.getenv($$$)

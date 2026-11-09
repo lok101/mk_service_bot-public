@@ -1,0 +1,13 @@
+id: no-pymongo-outside-infra
+language: python
+severity: error
+message: pymongo belongs in infrastructure.
+files:
+  - src/application/**/*.py
+  - src/domain/**/*.py
+  - src/interfaces/**/*.py
+rule:
+  any:
+    - pattern: import pymongo
+    - pattern: from pymongo import $$$
+    - pattern: from pymongo.$$$ import $$$

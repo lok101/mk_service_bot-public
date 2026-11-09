@@ -1,0 +1,17 @@
+id: no-os-environ-subscript-outside-config
+language: python
+severity: error
+message: os.environ[...] read belongs in src/config.
+files:
+  - src/**/*.py
+ignores:
+  - src/config/**/*.py
+rule:
+  any:
+    - pattern: $X = os.environ[$KEY]
+    - pattern: return os.environ[$KEY]
+    - pattern: $F(os.environ[$KEY])
+    - pattern: $F($A, os.environ[$KEY])
+    - pattern: $F(os.environ[$KEY], $B)
+    - pattern: os.environ[$KEY] or $Y
+    - pattern: $Y or os.environ[$KEY]

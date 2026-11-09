@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{% if editor.is_new %}Новый ингредиент{% else %}{{ editor.name }}{% endif %}{% endblock %}
+{% block page_title %}{% if editor.is_new %}Новый ингредиент{% else %}{{ editor.name }}{% endif %}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/coffee-ingredients">← Кофейные ингредиенты</a></p>
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p>Номер <span>{{ editor.number }}</span></p>
+
+  <form method="post" action="{% if editor.is_new %}/admin/coffee-ingredients/new{% else %}/admin/coffee-ingredients/{{ editor.domain_product_id }}{% endif %}">
+    <label class="admin-entity-name-field coffee-ing-field">
+      <span>Название</span>
+      <input class="coffee-ing-control" name="name" type="text" value="{{ editor.name }}" autocomplete="off">
+    </label>
+
+    <section class="admin-catalog-panel" aria-labelledby="pack-heading">
+      <h2 id="pack-heading">Упаковка</h2>
+      <div class="coffee-ing-pack-grid">
+        <label class="coffee-ing-field">
+          <span>Ед.</span>
+          <select class="coffee-ing-control" name="unit" required>
+            <option value="g" {% if editor.unit_key == "g" %}selected{% endif %}>г</option>
+            <option value="kg" {% if editor.unit_key == "kg" %}selected{% endif %}>кг</option>
+            <option value="ml" {% if editor.unit_key == "ml" %}selected{% endif %}>мл</option>
+            <option value="pc" {% if editor.unit_key == "pc" %}selected{% endif %}>шт</option>
+          </select>
+        </label>
+        <label class="coffee-ing-field">
+          <span>Упаковка</span>
+          <input class="coffee-ing-control" name="pack_size" type="text" inputmode="decimal"
+                 value="{{ editor.pack_size }}" required autocomplete="off">
+        </label>
+      </div>
+    </section>
+
+    {% if editor.is_new %}
+    <section class="admin-catalog-panel" aria-labelledby="policies-heading">
+      <h2 id="policies-heading">Политики qty форм</h2>
+      <div class="coffee-ing-pack-grid">
+        <label class="coffee-ing-field">
+          <span>Загрузка · Radio N (уп.)</span>
+          <input class="coffee-ing-control" name="loading_radio_n" type="text" inputmode="numeric"
+                 value="{{ editor.loading_radio_n }}" required autocomplete="off">
+        </label>
+        <label class="coffee-ing-field">
+          <span>Ревизия · Min (г)</span>
+          <input class="coffee-ing-control" name="revision_min_qty" type="text" inputmode="decimal"
+                 value="{{ editor.revision_min_qty }}" required autocomplete="off">
+        </label>
+        <label class="coffee-ing-field">
+          <span>Ревизия · Max (г)</span>
+          <input class="coffee-ing-control" name="revision_max_qty" type="text" inputmode="decimal"
+                 value="{{ editor.revision_max_qty }}" required autocomplete="off">
+        </label>
+        <label class="coffee-ing-field">
+          <span>Склад · Min (уп.)</span>
+          <input class="coffee-ing-control" name="warehouse_min_qty" type="text" inputmode="decimal"
+                 value="{{ editor.warehouse_min_qty }}" required autocomplete="off">
+        </label>
+        <label class="coffee-ing-field">
+          <span>Склад · Max (уп.)</span>
+          <input class="coffee-ing-control" name="warehouse_max_qty" type="text" inputmode="decimal"
+                 value="{{ editor.warehouse_max_qty }}" required autocomplete="off">
+        </label>
+      </div>
+      <p class="admin-muted">Дальше лимиты правятся на <a href="/admin/coffee-form-policies">политиках форм</a>.</p>
+    </section>
+    {% else %}
+    <p class="admin-muted">Лимиты qty — на <a href="/admin/coffee-form-policies">политиках форм</a> по профилю.</p>
+    {% endif %}
+
+    {% if not editor.is_new %}
+    <section class="admin-catalog-panel" aria-labelledby="links-heading">
+      <h2 id="links-heading">Связи МойСклад</h2>
+      {% if editor.links %}
+      <ul class="coffee-ing-link-list">
+        {% for link in editor.links %}
+        <li class="coffee-ing-link-item">
+          <div class="coffee-ing-link-meta">
+            <span class="coffee-ing-link-code">{{ link.code }}</span>
+            <span class="coffee-ing-link-name">{{ link.name or "Карточка МС" }}</span>
+          </div>
+          {% if can_link %}
+          <button type="submit" class="coffee-ing-link-remove"
+                  name="action" value="unlink:{{ link.code }}"
+                  aria-label="Удалить связь {{ link.code }}">×</button>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="coffee-ing-link-empty">Нет связей через границу</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% call admin_save_bar(split=not editor.is_new) %}
+      {% if not editor.is_new and can_hide %}
+      <button type="submit" name="action" value="hide" class="admin-btn-danger">Скрыть</button>
+      {% endif %}
+      <button type="submit" name="action" value="save" class="admin-btn">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

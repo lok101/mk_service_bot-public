@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    <a class="admin-entity-link" href="/admin/visit-photo-profiles">← Профили фото</a>
+  </p>
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+
+  <form method="post" action="{{ form_action }}">
+    <label class="admin-entity-name-field">Название
+      <input name="name" type="text" value="{{ draft.name }}" required>
+    </label>
+    <h2>Группы фото</h2>
+    <p class="admin-hint">Содержательные группы = пункты памятки технику (min=max=N). Служебные создаются автоматически.</p>
+    <div class="demo-groups-list" aria-label="Группы профиля">
+      {% for group in draft.content_groups %}
+      <div class="demo-group-row">
+        <span class="demo-group-row-photo demo-group-row-photo--default" aria-hidden="true"></span>
+        <label class="demo-group-row-title">Название
+          <input type="hidden" name="content_group_id-{{ loop.index0 }}" value="{{ group.group_id }}">
+          <input name="content_group_title-{{ loop.index0 }}" type="text" value="{{ group.title }}" required>
+        </label>
+      </div>
+      {% endfor %}
+      <div class="demo-group-row">
+        <span class="demo-group-row-photo demo-group-row-photo--default" aria-hidden="true"></span>
+        <label class="demo-group-row-title">Новая группа
+          <input type="hidden" name="content_group_id-{{ draft.content_groups|length }}" value="">
+          <input name="content_group_title-{{ draft.content_groups|length }}" type="text" value="" placeholder="Название">
+        </label>
+      </div>
+    </div>
+
+    <h2>Членство (модель × стойка)</h2>
+    <p class="admin-hint">Для напольной модели оставьте тип стойки пустым.</p>
+    <div class="admin-table-wrap">
+      <table class="admin-roster">
+        <thead>
+          <tr>
+            <th scope="col">Модель</th>
+            <th scope="col">Тип стойки</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in draft.members %}
+          <tr>
+            <td>
+              <select name="member_model_id-{{ loop.index0 }}">
+                <option value="">—</option>
+                {% for model in models %}
+                <option value="{{ model.entry_id }}"
+                        {% if model.entry_id == member.model_id %}selected{% endif %}>
+                  {{ model.name }}{% if model.floor_standing %} (напольная){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <select name="member_stand_type_id-{{ loop.index0 }}">
+                <option value="">—</option>
+                {% for stand in stand_types %}
+                <option value="{{ stand.entry_id }}"
+                        {% if stand.entry_id == member.stand_type_id %}selected{% endif %}>
+                  {{ stand.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          {% endfor %}
+          {# Extra empty row for adding another member #}
+          <tr>
+            <td>
+              <select name="member_model_id-{{ draft.members|length }}">
+                <option value="">—</option>
+                {% for model in models %}
+                <option value="{{ model.entry_id }}">
+                  {{ model.name }}{% if model.floor_standing %} (напольная){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <select name="member_stand_type_id-{{ draft.members|length }}">
+                <option value="">—</option>
+                {% for stand in stand_types %}
+                <option value="{{ stand.entry_id }}">{{ stand.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% call admin_save_bar(split=not is_new) %}
+        {% if not is_new %}
+        <button type="submit" name="action" value="delete" class="admin-btn-danger">Удалить</button>
+        {% endif %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+
+  {% if not is_new and profile_id %}
+  <section class="admin-catalog-panel">
+    <h2>Tech-refs техника</h2>
+    {% if draft.tech_ref_keys %}
+    <ul>
+      {% for key in draft.tech_ref_keys %}
+      <li>
+        {{ key }}
+        <form method="post"
+              action="/admin/visit-photo-profiles/{{ profile_id }}/tech-refs/{{ key }}/delete"
+              class="admin-inline-form">
+          <button type="submit">Удалить</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="admin-hint">Файлов пока нет.</p>
+    {% endif %}
+    <form method="post"
+          action="/admin/visit-photo-profiles/{{ profile_id }}/tech-refs"
+          enctype="multipart/form-data">
+      <label>Загрузить
+        <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required>
+      </label>
+      <button type="submit">Добавить</button>
+    </form>
+  </section>
+  {% endif %}
+{% endblock %}

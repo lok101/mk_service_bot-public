@@ -1,0 +1,7 @@
+{% macro admin_save_bar(split=false, hidden=false) %}
+<div class="admin-save-bar"{% if hidden %} hidden{% endif %}>
+  <div class="admin-save-bar-inner{% if split %} admin-save-bar-split{% endif %}">
+    {{ caller() }}
+  </div>
+</div>
+{% endmacro %}

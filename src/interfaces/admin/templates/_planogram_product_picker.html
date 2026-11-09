@@ -1,0 +1,43 @@
+{# Shared planogram domain-product typeahead picker.
+   Expected context: domain_product_id, product_name, linked,
+   code_input_name, id_input_name, product_number, legacy_code, legacy_label.
+   show_create is ignored (no create UI). #}
+{% set has_selection = domain_product_id | length > 0 %}
+<div class="planogram-product-picker"{% if domain_product_id and not linked %} data-unlinked="true"{% endif %}>
+  <input type="search"
+         class="planogram-product-search admin-cell-input"
+         placeholder="Название товара…"
+         autocomplete="off"
+         aria-label="Поиск товара"
+         aria-autocomplete="list"
+         {% if has_selection %}hidden{% endif %}>
+  <span class="planogram-product-selected"{% if not has_selection %} hidden{% endif %}>
+    {% if domain_product_id %}
+    <a class="planogram-product-link"
+       href="/admin/domain-products/{{ domain_product_id }}"
+       target="_blank"
+       rel="noopener">{{ product_name }}</a>
+    {% elif legacy_label %}
+    <span class="planogram-product-legacy">{{ legacy_label }}</span>
+    {% else %}
+    <a class="planogram-product-link" href="#" target="_blank" rel="noopener"></a>
+    {% endif %}
+  </span>
+  <button type="button"
+          class="planogram-product-clear"
+          aria-label="Убрать товар"
+          {% if not has_selection %}hidden{% endif %}>✕</button>
+  <button type="button"
+          class="planogram-product-move"
+          aria-label="Перенести на полку"
+          {% if not has_selection %}hidden{% endif %}>↓</button>
+  <input type="hidden"
+         class="planogram-domain-product-id"
+         name="{{ id_input_name }}"
+         value="{{ domain_product_id }}">
+  <input type="hidden"
+         class="planogram-legacy-product-code"
+         name="{{ code_input_name }}"
+         value="{{ legacy_code }}">
+  <ul class="planogram-product-options" hidden role="listbox"></ul>
+</div>

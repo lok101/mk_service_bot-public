@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ display_name }}{% endblock %}
+{% block page_title %}{{ display_name }}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{ static_href('planogram.css') }}">
+{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/micromarket-planograms">← Холодильники</a></p>
+  <div class="admin-workspace-tabs">
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="planogram"
+            aria-selected="{% if active_tab == 'planogram' %}true{% else %}false{% endif %}">Планограмма</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="assembly"
+            aria-selected="{% if active_tab == 'assembly' %}true{% else %}false{% endif %}">Сборка</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="loading"
+            aria-selected="{% if active_tab == 'loading' %}true{% else %}false{% endif %}">Загрузка</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="tasks"
+            aria-selected="{% if active_tab == 'tasks' %}true{% else %}false{% endif %}">Задачи аппарата</button>
+    {% if show_fm_tab %}
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="fm"
+            aria-selected="{% if active_tab == 'fm' %}true{% else %}false{% endif %}">FM</button>
+    {% endif %}
+  </div>
+  <div class="admin-workspace-panel" data-tab="planogram"{% if active_tab != 'planogram' %} hidden{% endif %}>
+    {% include "micromarket_planogram.html" %}
+  </div>
+  <div class="admin-workspace-panel" data-tab="assembly"{% if active_tab != 'assembly' %} hidden{% endif %}>
+    {% include "micromarket_assembly.html" %}
+  </div>
+  <div class="admin-workspace-panel" data-tab="loading"{% if active_tab != 'loading' %} hidden{% endif %}>
+    {% include "micromarket_loading_orders.html" %}
+  </div>
+  <div class="admin-workspace-panel" data-tab="tasks"{% if active_tab != 'tasks' %} hidden{% endif %}>
+    {% with show_machine_column=false %}
+    {% include "micromarket_shop_list_publish_tasks.html" %}
+    {% endwith %}
+  </div>
+  {% if show_fm_tab %}
+  <div class="admin-workspace-panel" data-tab="fm"{% if active_tab != 'fm' %} hidden{% endif %}>
+    {% include "micromarket_fm.html" %}
+  </div>
+  {% endif %}
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll(".admin-workspace-tab");
+      var panels = document.querySelectorAll(".admin-workspace-panel");
+      function selectTab(selected) {
+        tabs.forEach(function (item) {
+          item.setAttribute(
+            "aria-selected",
+            item.getAttribute("data-tab") === selected ? "true" : "false"
+          );
+        });
+        panels.forEach(function (panel) {
+          if (panel.getAttribute("data-tab") === selected) {
+            panel.removeAttribute("hidden");
+          } else {
+            panel.setAttribute("hidden", "");
+          }
+        });
+        var url = new URL(document.URL);
+        url.searchParams.delete("order");
+        if (selected === "planogram") {
+          url.searchParams.delete("tab");
+        } else {
+          url.searchParams.set("tab", selected);
+        }
+        window.location.assign(url.toString());
+      }
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          selectTab(tab.getAttribute("data-tab"));
+        });
+      });
+    })();
+  </script>
+{% endblock %}

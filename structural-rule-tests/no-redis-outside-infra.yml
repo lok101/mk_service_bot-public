@@ -1,0 +1,8 @@
+id: no-redis-outside-infra
+valid:
+  - "import os"
+invalid:
+  - "import redis"
+  - "import redis as redis_lib"
+  - "from redis import Redis"
+  - "from redis.asyncio import Redis"

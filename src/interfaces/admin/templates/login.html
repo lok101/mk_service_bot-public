@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block chrome %}
+  <header class="admin-app-header">
+    <h1>Вход в админку</h1>
+  </header>
+  <div class="login-panel">
+    <script async src="https://telegram.org/js/telegram-widget.js?22"
+            data-telegram-login="{{ telegram_bot_username }}"
+            data-size="large"
+            data-onauth="onTelegramAuth(user)"
+            data-request-access="write"></script>
+    <script>
+      function onTelegramAuth(user) {
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/admin/auth/telegram";
+        form.enctype = "application/x-www-form-urlencoded";
+        Object.keys(user).forEach(function (key) {
+          var input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(user[key]);
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+      }
+    </script>
+    {% if stub_login_enabled %}
+    <form method="post" action="/admin/auth/stub">
+      <label>telegram_user_id
+        <input name="telegram_user_id" type="text">
+      </label>
+      <button type="submit">Войти</button>
+    </form>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block body %}{% endblock %}

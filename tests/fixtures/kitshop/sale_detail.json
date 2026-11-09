@@ -1,0 +1,16 @@
+{
+  "ResultCode": 0,
+  "Sales": [
+    {
+      "SaleId": 100,
+      "CompanyId": 1,
+      "ShopId": 10,
+      "DeviceId": 99,
+      "SaleDateTime": "04.09.2026 12:00:00",
+      "Positions": [
+        {"PositionId": 1, "ProductId": 50, "Quantity": 1.0, "Price": 100.0},
+        {"PositionId": 2, "ProductId": 50, "Quantity": 2.0, "Price": 100.0}
+      ]
+    }
+  ]
+}

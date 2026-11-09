@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Roster{% endblock %}
+{% block page_title %}Roster локаций{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{ static_href('leaflet.css') }}">
+{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    Правки пишутся в общий черновик автоматически. «Применить» переносит весь
+    черновик в парк. Сохраняется вся таблица, не только отфильтрованные строки —
+    скрытые фильтром строки остаются в форме.
+  </p>
+
+  {% if roster_conflict %}
+  <div class="admin-roster-dirty-banner" role="alert">
+    Черновик изменился (конфликт версий). Страница обновлена — повторите
+    «Применить» или «Сбросить».
+  </div>
+  {% endif %}
+
+  <div id="roster-dirty-banner"
+       class="admin-roster-dirty-banner"
+       role="status"
+       {% if not draft_dirty %}hidden{% endif %}>
+    Черновик отличается от применённого roster. Нажмите «Применить», чтобы
+    записать изменения в парк, или «Сбросить», чтобы вернуть черновик.
+  </div>
+
+  <section class="admin-map-block" aria-label="Карта закреплений">
+    <div class="admin-map-toolbar">
+      <button type="button"
+              id="roster-map-expand"
+              class="admin-map-expand-btn"
+              aria-pressed="false"
+              aria-controls="roster-map">
+        Развернуть карту
+      </button>
+    </div>
+    <div id="roster-map" class="admin-roster-map" role="img" aria-label="Карта локаций"></div>
+    <div id="roster-map-legend" class="admin-map-legend"></div>
+    {% if not map_coordinates_available %}
+    <p id="roster-map-hint" class="admin-muted">
+      Каталог локаций с координатами недоступен — карта пуста; таблица работает как обычно.
+    </p>
+    {% endif %}
+    <p class="admin-muted">На карте: <span id="roster-map-count">0</span></p>
+  </section>
+
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin" id="roster-chrome-pin">
+      <div class="admin-filters" id="roster-filters">
+        <label>Поиск (код / имя)
+          <input type="search" id="roster-search" placeholder="101 или Школа" autocomplete="off">
+        </label>
+        <label>Техник
+          <select id="roster-technician-filter">
+            <option value="all">Все</option>
+            <option value="unassigned">Без техника</option>
+            {% for tech in technicians %}
+            <option value="{{ tech.id }}">{{ tech.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>День ТО
+          <select id="roster-weekday-filter">
+            <option value="all">Любой</option>
+            <option value="0">пн</option>
+            <option value="1">вт</option>
+            <option value="2">ср</option>
+            <option value="3">чт</option>
+            <option value="4">пт</option>
+            <option value="5">сб</option>
+            <option value="6">вс</option>
+          </select>
+        </label>
+        <p class="admin-muted">Показано <span id="roster-visible-count">0</span> из
+          <span id="roster-total-count">{{ rows|length }}</span></p>
+      </div>
+    </div>
+
+    <form method="post" action="/admin/roster/apply" id="roster-form"
+          data-draft-dirty="{% if draft_dirty %}true{% else %}false{% endif %}">
+      <div class="admin-table-wrap">
+        <table class="admin-roster" id="roster-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-sort-key="machine-id" scope="col">Код</th>
+              <th class="sortable" data-sort-key="location-name" scope="col">Локация</th>
+              <th scope="col">Техник</th>
+              <th class="admin-roster-weekday" scope="col">пн</th>
+              <th class="admin-roster-weekday" scope="col">вт</th>
+              <th class="admin-roster-weekday" scope="col">ср</th>
+              <th class="admin-roster-weekday" scope="col">чт</th>
+              <th class="admin-roster-weekday" scope="col">пт</th>
+              <th class="admin-roster-weekday" scope="col">сб</th>
+              <th class="admin-roster-weekday" scope="col">вс</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr
+              data-machine-id="{{ row.machine_id }}"
+              data-location-name="{{ row.location_name }}"
+              data-technician-id="{{ row.technician_id }}"
+              data-weekdays="{% for d in row.weekdays|sort %}{{ d }}{% if not loop.last %},{% endif %}{% endfor %}"
+              data-applied-technician-id="{{ row.applied_technician_id }}"
+              data-applied-weekdays="{% for d in row.applied_weekdays|sort %}{{ d }}{% if not loop.last %},{% endif %}{% endfor %}"
+              data-updated-at="{{ row.updated_at }}"
+              {% if row.latitude is not none and row.longitude is not none %}
+              data-lat="{{ row.latitude }}"
+              data-lng="{{ row.longitude }}"
+              {% endif %}
+            >
+              <td>{{ row.machine_id }}</td>
+              <td>
+                {% if master_profile_links %}
+                <a class="admin-entity-link"
+                   href="/admin/machines/{{ row.machine_id }}">{{ row.location_name }}</a>
+                {% else %}
+                {{ row.location_name }}
+                {% endif %}
+              </td>
+              <td>
+                <select name="technician-{{ row.machine_id }}">
+                  <option value="">—</option>
+                  {% for tech in technicians %}
+                  <option value="{{ tech.id }}" {% if tech.id == row.technician_id %}selected{% endif %}>
+                    {{ tech.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <input type="hidden"
+                       name="expected_draft_updated_at-{{ row.machine_id }}"
+                       value="{{ row.updated_at }}">
+                <input type="hidden"
+                       name="expected_applied_updated_at-{{ row.machine_id }}"
+                       value="{{ row.applied_updated_at }}">
+              </td>
+              {% for iso in range(7) %}
+              <td class="admin-roster-weekday">
+                <label class="admin-roster-weekday-hit">
+                  <input type="checkbox"
+                         name="wd-{{ row.machine_id }}-{{ iso }}"
+                         {% if iso in row.weekdays %}checked{% endif %}>
+                </label>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% call admin_save_bar() %}
+          <button type="submit"
+                  id="roster-reset"
+                  {% if not draft_dirty %}disabled{% endif %}
+                  formaction="/admin/roster/reset"
+                  name="action"
+                  value="reset">Сбросить</button>
+          <button type="submit"
+                  id="roster-apply"
+                  {% if not draft_dirty %}disabled{% endif %}>Применить</button>
+      {% endcall %}
+    </form>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('leaflet.js') }}" defer></script>
+  <script src="{{ static_href('roster.js') }}" defer></script>
+  <script src="{{ static_href('roster-map.js') }}" defer></script>
+{% endblock %}

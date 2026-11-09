@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{{ machine.machine_id.value }}{% endblock %}
+{% block page_title %}{{ machine.machine_id.value }}{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    <a href="/admin/snack-planograms">← Снеки</a>
+  </p>
+
+  <p class="admin-muted">{{ display_name }}</p>
+  <p class="admin-muted">Компания: {{ company_name or "—" }}</p>
+
+  {% if layout_error %}
+  <p class="admin-error">{{ layout_error }}</p>
+  {% endif %}
+  {% if layout_archived_warning %}
+  <p class="admin-hint" role="status">{{ layout_archived_warning }}</p>
+  {% endif %}
+
+  <form method="post" action="/admin/machines/{{ machine.machine_id.value }}/layout" id="machine-planogram-form">
+    {% include "_planogram_form.html" %}
+
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+
+  <form method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/layout/apply"
+        class="admin-layout-apply-form">
+    <button type="submit">Применить</button>
+  </form>
+  <form method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/layout/copy"
+        class="admin-layout-copy-form">
+    <label>
+      Скопировать раскладку с
+      <select name="source_machine_id">
+        {% for source_id, source_label in layout_section.copy_sources %}
+        <option value="{{ source_id }}">{{ source_label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Копировать</button>
+  </form>
+  <script src="{{ static_href('planogram.js') }}" defer></script>
+{% endblock %}

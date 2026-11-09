@@ -1,0 +1,7 @@
+id: no-pymongo-outside-infra
+valid:
+  - "import os"
+invalid:
+  - "import pymongo"
+  - "from pymongo import MongoClient"
+  - "from pymongo.errors import DuplicateKeyError"

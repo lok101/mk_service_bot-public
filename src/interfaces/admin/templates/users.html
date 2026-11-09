@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Доступ{% endblock %}
+{% block page_title %}Доступ{% endblock %}
+{% block body %}
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p class="admin-hint">
+    Сохраняется вся таблица. Веб-доступ задаётся ролями компании на карточке;
+    открываемые экраны следуют из ролей. «Активен» — вход в админку.
+    Учёт техников и роль в боте — на экране «Техники». Удаления нет.
+  </p>
+
+  <div class="admin-filters" id="users-filters" aria-label="Фильтр статуса">
+    <label>Активен
+      <select id="users-active-filter">
+        <option value="active" selected>Активные</option>
+        <option value="inactive">Неактивные</option>
+        <option value="all">Все</option>
+      </select>
+    </label>
+  </div>
+
+  <form method="post" action="/admin/users" id="users-form">
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="users-table">
+        <thead>
+          <tr>
+            <th scope="col">Имя</th>
+            <th scope="col">Telegram id</th>
+            <th scope="col">Активен</th>
+            {% for role in all_company_roles %}
+            <th scope="col">{{ company_role_labels.get(role.value, role.value) }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          {% set row_index = loop.index0 %}
+          <tr data-active="{{ row.is_active|lower }}">
+            <td>
+              <input type="hidden" name="user_id-{{ row_index }}" value="{{ row.user_id }}">
+              <input name="name-{{ row_index }}" type="text" value="{{ row.name }}" required>
+            </td>
+            <td>
+              {% if row.technician_id %}
+              <input
+                type="hidden"
+                name="telegram_user_id-{{ row_index }}"
+                value="{{ row.telegram_user_id }}"
+              >
+              <span>{{ row.telegram_user_id }}</span>
+              {% else %}
+              <input
+                name="telegram_user_id-{{ row_index }}"
+                type="text"
+                value="{{ row.telegram_user_id }}"
+                required
+              >
+              {% endif %}
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                name="is_active-{{ row_index }}"
+                {% if row.is_active %}checked{% endif %}
+              >
+            </td>
+            {% for role in all_company_roles %}
+            <td>
+              <input
+                type="checkbox"
+                name="company_role_{{ role.value }}-{{ row_index }}"
+                {% if role in row.company_roles %}checked{% endif %}
+              >
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          {# create row #}
+          <tr data-create="1" data-active="true">
+            <td>
+              <input type="hidden" name="user_id-{{ rows|length }}" value="">
+              <input name="name-{{ rows|length }}" type="text" value="" placeholder="Новый">
+            </td>
+            <td>
+              <input
+                name="telegram_user_id-{{ rows|length }}"
+                type="text"
+                value=""
+                placeholder="Telegram id"
+              >
+            </td>
+            <td>
+              <input type="checkbox" name="is_active-{{ rows|length }}" checked>
+            </td>
+            {% for role in all_company_roles %}
+            <td>
+              <input type="checkbox" name="company_role_{{ role.value }}-{{ rows|length }}">
+            </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('users.js') }}" defer></script>
+{% endblock %}

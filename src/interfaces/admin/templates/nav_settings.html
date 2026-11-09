@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Настройки меню{% endblock %}
+{% block page_title %}Настройки меню{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    Порядок пунктов и папки (один уровень). Перетащите элементы; «Сохранить» пишет
+    глобальную структуру для всех операторов.
+  </p>
+  <form method="post" action="/admin/nav-settings" id="nav-settings-form" class="nav-settings">
+    <input type="hidden" name="structure_json" id="structure_json" value="{{ structure_json }}">
+    <div
+      id="nav-settings-editor"
+      class="nav-settings-editor"
+      data-nav-structure="{{ structure_json | e }}"
+    >
+      <div class="nav-settings-toolbar">
+        <button type="button" id="nav-settings-add-folder" class="admin-btn admin-btn-secondary">
+          Создать папку
+        </button>
+      </div>
+      <ul id="nav-settings-root" class="nav-settings-list" data-drop-zone="root"></ul>
+    </div>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('nav_settings.js') }}" defer></script>
+{% endblock %}

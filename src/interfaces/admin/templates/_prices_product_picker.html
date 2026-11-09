@@ -1,0 +1,36 @@
+{# Domain-product typeahead for prices tab (no shelf-move).
+   Context: domain_product_id, product_name #}
+{% set has_selection = domain_product_id | length > 0 %}
+<div class="planogram-product-picker">
+  <input type="search"
+         class="planogram-product-search admin-cell-input"
+         placeholder="Название товара…"
+         autocomplete="off"
+         aria-label="Поиск товара"
+         aria-autocomplete="list"
+         {% if has_selection %}hidden{% endif %}
+         {% if not prices_can_edit %}disabled{% endif %}>
+  <span class="planogram-product-selected"{% if not has_selection %} hidden{% endif %}>
+    {% if domain_product_id %}
+    <a class="planogram-product-link"
+       href="/admin/domain-products/{{ domain_product_id }}"
+       target="_blank"
+       rel="noopener">{{ product_name }}</a>
+    {% else %}
+    <a class="planogram-product-link" href="#" target="_blank" rel="noopener"></a>
+    {% endif %}
+  </span>
+  <button type="button"
+          class="planogram-product-clear"
+          aria-label="Убрать товар"
+          {% if not has_selection or not prices_can_edit %}hidden{% endif %}>✕</button>
+  <input type="hidden"
+         class="planogram-domain-product-id"
+         name="product_domain_id"
+         value="{{ domain_product_id }}">
+  <input type="hidden"
+         class="planogram-legacy-product-code"
+         name="product_legacy_code"
+         value="">
+  <ul class="planogram-product-options" hidden role="listbox"></ul>
+</div>

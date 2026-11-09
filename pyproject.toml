@@ -1,0 +1,382 @@
+[project]
+name = "mk-service-bot"
+version = "0.1.0"
+description = "Telegram bot and API for vending machine service workflows (Google Forms, MoySklad, event sourcing)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aioboto3>=15.5.0",
+    "aiogram-dialog>=2.6.0",
+    "apscheduler>=3.10,<4",
+    "beartype>=0.22.9",
+    "fastapi>=0.136.1",
+    "google-api-python-client>=2.196.0",
+    "google-auth>=2.53.0",
+    "google-auth-oauthlib>=1.2.0",
+    "httpx>=0.28.1",
+    "jinja2>=3.1.6",
+    "openpyxl>=3.1.5",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "pymongo>=4.18.3",
+    "python-dotenv>=1.2.2",
+    "python-multipart>=0.0.32",
+    "redis>=7.4.0",
+    "tzdata>=2025.2",
+    "uvicorn[standard]>=0.47.0",
+    "xlrd>=2.0.2",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.168.0",
+    "import-linter>=2.12",
+    "mongomock>=4.3.0",
+    "mypy>=1.19.0",
+    "pip-audit>=2.10",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.14.0",
+    "testcontainers>=4.14.2",
+    "types-python-dateutil>=2.9.0.20251115",
+]
+visit-photo-grouping = [
+    "open-clip-torch>=2.27",
+    "pillow>=10",
+    "torch>=2.5",
+    # Direct pin so [tool.uv.sources] pytorch-cpu applies (transitive open-clip
+    # otherwise resolves torchvision from PyPI → torchvision::nms mismatch).
+    "torchvision>=0.20",
+]
+
+[tool.uv]
+constraint-dependencies = [
+    "aiohttp>=3.14.4",
+    "starlette>=1.3.1",
+    "cryptography>=50",
+    "httplib2>=0.32.0",
+    "pyasn1>=0.6.5",
+    "pip>=26.2",
+    "urllib3>=2.8.0",
+    "multidict>=6.9.1",
+    "dnspython>=2.9.0",
+    "filelock>=4.2.1",
+    "msgpack>=1.2.3",
+]
+
+# CPU-only torch/torchvision for visit-photo-grouping worker image (no CUDA index).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = [".cursor"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+packages = ["src"]
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "src.infrastructure.integrations.google.sheets.sheet_reader"
+disable_error_code = ["no-untyped-call", "attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "src.infrastructure.integrations.google.sheets.settlement_audit_writer"
+disable_error_code = ["no-untyped-call", "attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "src.interfaces.telegram.machines.windows"
+disable_error_code = ["arg-type"]
+
+[[tool.mypy.overrides]]
+module = "src.interfaces.telegram.machines.handlers"
+disable_error_code = ["arg-type"]
+
+[[tool.mypy.overrides]]
+module = [
+    "aioboto3",
+    "aioboto3.*",
+    "botocore",
+    "botocore.*",
+    "aiogram.*",
+    "aiogram_dialog.*",
+    "apscheduler.*",
+    "google.*",
+    "googleapiclient.*",
+    "mongomock.*",
+    "open_clip",
+    "open_clip.*",
+    "openpyxl",
+    "openpyxl.*",
+    "PIL",
+    "PIL.*",
+    "pymongo.*",
+    "testcontainers.*",
+    "torch",
+    "torch.*",
+    "uvicorn.*",
+    "xlrd",
+    "xlrd.*",
+]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/infrastructure/testing/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = [
+    "--import-mode=importlib",
+    "-m",
+    "not integration and not moysklad_live and not kitvending_live and not matrix_kit_live and not kitshop_matrix_live and not docker_e2e",
+]
+markers = [
+    "integration: tests that require a real MongoDB instance",
+    "moysklad_live: opt-in tests against real MoySklad API (requires .env.moysklad-live)",
+    "kitvending_live: opt-in tests against real KitVending API (requires .env.kitvending-live)",
+    "matrix_kit_live: opt-in live upload+bind suite (requires .env.matrix-kit-live; no Mongo)",
+    "kitshop_matrix_live: opt-in Kit Shop matrix remove and command on the PROBE shop",
+    "docker_e2e: black-box tests against docker compose app container",
+]
+
+[tool.importlinter]
+root_packages = ["src", "scripts"]
+
+[[tool.importlinter.contracts]]
+name = "Layered architecture"
+type = "layers"
+layers = [
+    "src.infrastructure",
+    "src.interfaces",
+    "src.application",
+    "src.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Application package internals are private"
+type = "forbidden"
+source_modules = [
+    "src.application.machine_operations",
+    "src.application.form_submissions",
+    "src.application.form_workflow",
+    "src.application.inventory_reconciliation",
+    "src.application.technician_settlement",
+    "src.application.technician_accountability",
+    "src.application.photo_batches",
+    "src.application.photo_integrity",
+    "src.application.sheets",
+    "src.application.coffee_bom",
+    "src.application.demand_analytics",
+    "src.application.outbox",
+    "src.application.shared",
+    "src.application.reference_data",
+    "src.application.master_data",
+    "src.application.matrix_automation",
+    "src.application.technician_warehouse",
+    "src.application.visit_photo_review",
+    "src.application.visit_photo_grouping",
+    "src.application.snack_loading",
+    "src.application.micromarket_loading",
+    "src.application.sales_monitoring",
+    "src.application.event_reminders",
+    "src.application.machine_pnl",
+    "src.application.service_visits",
+    "src.application.product_identity",
+    "src.application.form_inventory_policy",
+    "src.infrastructure",
+    "src.interfaces",
+    "scripts",
+]
+forbidden_modules = [
+    "src.application.*.accept",
+    "src.application.*.accept_flow",
+    "src.application.*.admin",
+    "src.application.*.audit_format",
+    "src.application.*.audit_rows",
+    "src.application.*.bot_users",
+    "src.application.*.caption",
+    "src.application.*.close_period",
+    "src.application.*.conversions",
+    "src.application.*.downloader_ref",
+    "src.application.*.duplicate_alert",
+    "src.application.*.errors",
+    "src.application.*.executor",
+    "src.application.*.finalize_reconciliation",
+    "src.application.*.finding_id",
+    "src.application.*.form_quantities",
+    "src.application.*.handler_ids",
+    "src.application.*.handlers",
+    "src.application.*.integrity_outbox_handler",
+    "src.application.*.inventory_snapshot",
+    "src.application.*.import_sales",
+    "src.application.*.kitvending",
+    "src.application.*.job_models",
+    "src.application.*.navigation",
+    "src.application.*.models",
+    "src.application.*.notifier_ref",
+    "src.application.*.outbox_errors",
+    "src.application.*.outbox_handler",
+    "src.application.*.period_errors",
+    "src.application.*.period_reconciliation_handler",
+    "src.application.*.period_snapshot_builder",
+    "src.application.*.period_snapshot_helpers",
+    "src.application.*.period_snapshot_recalculate",
+    "src.application.*.post_accountability",
+    "src.application.*.post_ledger",
+    "src.application.*.preview_reconciliation",
+    "src.application.*.process_loading_integrity",
+    "src.application.*.product_catalog",
+    "src.application.*.quantity_validation",
+    "src.application.*.rebuild_periods",
+    "src.application.*.recalculate_periods",
+    "src.application.*.reconciliation_planner",
+    "src.application.*.record_duplicate",
+    "src.application.*.refresh_pending",
+    "src.application.*.resolvers",
+    "src.application.*.sales_prepare",
+    "src.application.*.scope",
+    "src.application.*.seed_baseline",
+    "src.application.*.services",
+    "src.application.*.snapshot_services",
+    "src.application.*.location_roster_draft_compare",
+    "src.application.*.master_data_hydrate",
+    "src.application.*.system_users",
+    "src.application.*.technician_locations",
+    "src.application.*.token_field",
+    "src.application.*.use_cases",
+    "src.application.*.validate_catalog",
+    "src.application.*.wipe",
+]
+ignore_imports = [
+    "src.application.** -> src.application.shared.**",
+    "src.infrastructure.composition.** -> src.application.**",
+]
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"
+
+[[tool.importlinter.contracts]]
+name = "Application context map"
+type = "independence"
+unmatched_ignore_imports_alerting = "error"
+modules = [
+    "src.application.coffee_bom",
+    "src.application.demand_analytics",
+    "src.application.form_submissions",
+    "src.application.form_workflow",
+    "src.application.inventory_reconciliation",
+    "src.application.machine_operations",
+    "src.application.matrix_automation",
+    "src.application.outbox",
+    "src.application.photo_batches",
+    "src.application.photo_integrity",
+    "src.application.reference_data",
+    "src.application.master_data",
+    "src.application.shared",
+    "src.application.sheets",
+    "src.application.technician_accountability",
+    "src.application.technician_settlement",
+    "src.application.technician_warehouse",
+    "src.application.visit_photo_review",
+    "src.application.visit_photo_grouping",
+    "src.application.snack_loading",
+    "src.application.micromarket_loading",
+    # ignore_imports for sales_monitoring → machine_operations and
+    # outbox → sales_monitoring added with first real cross-BC imports (fragment 04).
+    "src.application.sales_monitoring",
+    "src.application.event_reminders",
+    # machine_pnl edges (→ inventory_reconciliation; outbox → machine_pnl) — fragment 03.
+    "src.application.machine_pnl",
+    # ignore_imports outbox → service_visits — fragment 06 (first real cross-BC import).
+    "src.application.service_visits",
+    "src.application.product_identity",
+    "src.application.form_inventory_policy",
+]
+ignore_imports = [
+    # shared kernel (forbidden-контракт свой ignore не шарит с independence)
+    "src.application.** -> src.application.shared.**",
+    # as-is прямые рёбра (package barrel и/или submodule — только реально встречающиеся формы)
+    "src.application.coffee_bom.** -> src.application.product_identity",
+    "src.application.coffee_bom.** -> src.application.product_identity.**",
+    "src.application.form_submissions.** -> src.application.machine_operations",
+    "src.application.inventory_reconciliation.** -> src.application.coffee_bom.**",
+    "src.application.inventory_reconciliation.** -> src.application.form_submissions",
+    "src.application.inventory_reconciliation.** -> src.application.form_submissions.**",
+    "src.application.inventory_reconciliation.** -> src.application.snack_loading",
+    "src.application.inventory_reconciliation.** -> src.application.micromarket_loading",
+    "src.application.inventory_reconciliation.** -> src.application.product_identity",
+    "src.application.inventory_reconciliation.** -> src.application.product_identity.**",
+    "src.application.machine_pnl -> src.application.inventory_reconciliation",
+    "src.application.machine_pnl.** -> src.application.inventory_reconciliation",
+    "src.application.machine_pnl.** -> src.application.inventory_reconciliation.**",
+    "src.application.machine_pnl.** -> src.application.coffee_bom.**",
+    "src.application.machine_pnl.** -> src.application.product_identity.**",
+    "src.application.matrix_automation.** -> src.application.reference_data",
+    "src.application.matrix_automation.** -> src.application.master_data",
+    "src.application.outbox.** -> src.application.form_submissions",
+    "src.application.outbox.** -> src.application.form_submissions.**",
+    "src.application.outbox.** -> src.application.form_workflow",
+    "src.application.outbox.** -> src.application.inventory_reconciliation",
+    "src.application.outbox.** -> src.application.machine_pnl",
+    "src.application.outbox.** -> src.application.machine_pnl.**",
+    "src.application.outbox.** -> src.application.technician_settlement",
+    "src.application.outbox.** -> src.application.technician_warehouse",
+    "src.application.outbox.** -> src.application.sales_monitoring.**",
+    "src.application.outbox.** -> src.application.service_visits",
+    "src.application.outbox.** -> src.application.service_visits.**",
+    "src.application.outbox.** -> src.application.micromarket_loading.**",
+    "src.application.photo_batches.** -> src.application.form_submissions",
+    "src.application.photo_batches.** -> src.application.machine_operations",
+    "src.application.photo_integrity.** -> src.application.machine_operations.**",
+    "src.application.photo_integrity.** -> src.application.photo_batches",
+    "src.application.photo_integrity.** -> src.application.photo_batches.**",
+    "src.application.reference_data.** -> src.application.sheets",
+    "src.application.reference_data.** -> src.application.master_data",
+    "src.application.master_data.** -> src.application.sheets",
+    "src.application.master_data.** -> src.application.sheets.**",
+    "src.application.sales_monitoring.** -> src.application.machine_operations.**",
+    "src.application.shared.** -> src.application.machine_operations.**",
+    "src.application.technician_settlement -> src.application.technician_warehouse",
+    "src.application.technician_settlement.** -> src.application.technician_warehouse",
+    "src.application.technician_settlement.** -> src.application.technician_warehouse.**",
+    "src.application.technician_settlement.** -> src.application.inventory_reconciliation.**",
+    "src.application.technician_settlement.** -> src.application.machine_operations.**",
+    "src.application.technician_settlement.** -> src.application.sheets.**",
+    "src.application.technician_warehouse.** -> src.application.form_submissions",
+    "src.application.technician_warehouse.** -> src.application.form_submissions.**",
+    "src.application.snack_loading.** -> src.application.matrix_automation.**",
+    # micromarket_loading (foundation 01): ShopName extract + MachineKind
+    # IR→MM and MM→reference_data — add when fragments 02/03 introduce imports
+    "src.application.micromarket_loading.** -> src.application.matrix_automation",
+    "src.application.micromarket_loading.** -> src.application.master_data",
+    "src.application.micromarket_loading.** -> src.application.product_identity",
+    "src.application.micromarket_loading.** -> src.application.product_identity.**",
+    "src.application.matrix_automation.** -> src.application.product_identity",
+    "src.application.matrix_automation.** -> src.application.product_identity.**",
+    "src.application.visit_photo_grouping.** -> src.application.visit_photo_review",
+    "src.application.visit_photo_grouping.** -> src.application.visit_photo_review.**",
+]

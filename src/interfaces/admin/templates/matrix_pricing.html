@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Правила цены{% endblock %}
+{% block page_title %}Правила цены{% endblock %}
+{% block body %}
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  {% if empty_store %}
+  <p class="admin-hint">
+    Шкала наценки ещё не задана. Заполните поля и нажмите «Сохранить».
+  </p>
+  {% endif %}
+
+  <form method="get" action="/admin/matrix-pricing" class="admin-preview-form">
+    <label>Пробная себестоимость
+      <input class="admin-cell-input" name="preview_purchase" value="{{ preview_purchase }}"
+             inputmode="decimal" autocomplete="off">
+    </label>
+    <button type="submit" class="admin-btn admin-btn-secondary">Preview</button>
+    {% if preview_sell is not none %}
+    <p class="admin-hint">Sell (множители = 1): <strong>{{ preview_sell }}</strong></p>
+    {% endif %}
+  </form>
+
+  <form method="post" action="/admin/matrix-pricing">
+    <div class="admin-table-wrap">
+      <table class="admin-roster admin-matrix-pricing-scale">
+        <thead>
+          <tr>
+            <th scope="col" class="admin-matrix-pricing-scale-label"></th>
+            <th scope="col">Значение, ₽</th>
+            <th scope="col">Наценка, %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><label for="scale_price_min">Минимум шкалы</label></th>
+            <td>
+              <input class="admin-cell-input" id="scale_price_min" name="scale_price_min"
+                     value="{{ form.scale_price_min }}" required inputmode="decimal">
+            </td>
+            <td>
+              <span class="admin-input-suffix-wrap">
+                <input class="admin-cell-input" id="scale_rate_max" name="scale_rate_max"
+                       value="{{ form.scale_rate_max }}" required inputmode="decimal"
+                       aria-label="Наценка при минимуме шкалы, проценты">
+                <span class="admin-input-suffix" aria-hidden="true">%</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="scale_price_max">Максимум шкалы</label></th>
+            <td>
+              <input class="admin-cell-input" id="scale_price_max" name="scale_price_max"
+                     value="{{ form.scale_price_max }}" required inputmode="decimal">
+            </td>
+            <td>
+              <span class="admin-input-suffix-wrap">
+                <input class="admin-cell-input" id="scale_rate_min" name="scale_rate_min"
+                       value="{{ form.scale_rate_min }}" required inputmode="decimal"
+                       aria-label="Наценка при максимуме шкалы, проценты">
+                <span class="admin-input-suffix" aria-hidden="true">%</span>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="admin-roster admin-matrix-pricing-params">
+        <tbody>
+          <tr>
+            <th scope="row"><label for="curvature">Изгиб шкалы</label></th>
+            <td>
+              <input class="admin-cell-input" id="curvature" name="curvature"
+                     value="{{ form.curvature }}" required inputmode="decimal">
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="margin_floor">Мин. наценка, ₽</label></th>
+            <td>
+              <input class="admin-cell-input" id="margin_floor" name="margin_floor"
+                     value="{{ form.margin_floor }}" required inputmode="decimal">
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="rounding_last_digits">Округление</label></th>
+            <td>
+              <input class="admin-cell-input" id="rounding_last_digits" name="rounding_last_digits"
+                     value="{{ form.rounding_last_digits }}"
+                     placeholder="пусто = ceil; напр. 0,5">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

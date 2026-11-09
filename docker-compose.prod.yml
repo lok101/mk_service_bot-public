@@ -1,0 +1,116 @@
+name: mk_service_bot
+
+services:
+  app:
+    env_file: !override
+      - .env.prod
+    ports: !override
+      - "127.0.0.1:8000:8000"
+    environment:
+      ENVIRONMENT: prod
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1280M
+
+  effects-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 768M
+
+  matrix-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  sales-monitoring-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+
+  daily-sales-demand-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+
+  machine-pnl-month-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+
+  service-visits-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+
+  event-reminders-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  visit-photo-grouping-worker:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+  mongo:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 2048M
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+  caddy:
+    env_file: !override
+      - .env.prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+volumes:
+  mongo_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,4 @@
+ruleDirs:
+  - structural-rules
+testConfigs:
+  - testDir: structural-rule-tests

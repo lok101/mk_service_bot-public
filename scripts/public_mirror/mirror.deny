@@ -1,0 +1,46 @@
+# Hard deny (wins over allow). Keep this list aggressive.
+
+# Docs / OM / discovery / plans / audits
+docs/**
+AGENTS.md
+AGENT-OVERLAY.md
+DEPLOYMENT.md
+ops-notes/**
+tasks/**
+done.txt
+TASKS.md
+
+# Agent process / platform corpus
+.cursor/**
+agent-kernel/**
+kernel_ref
+verification/**
+operating_cases/**
+
+# CI may reference private process
+.github/**
+
+# Business catalog / recipe dumps
+coffee_domain_drinks.csv
+coffee_domain_ingredients.csv
+coffee_domain_recipe_lines.csv
+coffee_recipes.json
+_kitshop_sales_shops.txt
+
+# Private env / README templates (replaced by overlays/)
+.env.dev.example
+.env.prod.example
+.env.e2e.example
+.env.matrix-kit-live.example
+.env.moysklad-live.example
+README.md
+
+# Live credential suites and dummy OAuth mounts
+tests/integration/kitvending_live/**
+tests/integration/matrix_kit_live/**
+tests/integration/moysklad_live/**
+docker/e2e/credentials.json
+docker/e2e/google-forms-user-oauth.json
+
+# Backup unit files are ops-specific
+docker/mongo-backup/**

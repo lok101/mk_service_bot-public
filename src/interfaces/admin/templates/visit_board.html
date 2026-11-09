@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Визиты{% endblock %}
+{% set month_names = [
+  '', 'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+  'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
+] %}
+{% set weekday_labels = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'] %}
+{% block page_title %}Календарь визитов — {{ month_names[board.month] }} {{ board.year }}{% endblock %}
+{% block body %}
+  <form method="get" action="/admin/visit-board" class="visit-board-month-form">
+    <label>Год
+      <input type="number" name="year" value="{{ board.year }}" min="2000" max="2100">
+    </label>
+    <label>Месяц
+      <input type="number" name="month" value="{{ board.month }}" min="1" max="12">
+    </label>
+    <button type="submit">Показать</button>
+  </form>
+
+  {% if not board.technicians %}
+  <p class="admin-muted">Нет данных за выбранный месяц.</p>
+  {% else %}
+  <div class="visit-board-chrome-pin">
+    <div class="admin-table-wrap">
+      <table class="visit-board-table visit-board-header-table">
+        <thead>
+          <tr class="visit-board-dates">
+            <th scope="col" class="visit-board-first-col">Точка</th>
+            {% for day in board.days %}
+            <th scope="col" class="visit-board-day-col{% if day == board.today %} visit-board-today{% endif %}">
+              {{ day.day }}
+            </th>
+            {% endfor %}
+          </tr>
+          <tr class="visit-board-weekdays">
+            <th scope="col" class="visit-board-first-col"></th>
+            {% for day in board.days %}
+            <th scope="col" class="visit-board-day-col{% if day == board.today %} visit-board-today{% endif %}">
+              {{ weekday_labels[day.weekday()] }}
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+
+  {% for tech in board.technicians %}
+  <section class="visit-board-block" aria-label="Техник {{ tech.display_name }}">
+    <h2 class="visit-board-tech">{{ tech.display_name }}</h2>
+    <div class="admin-table-wrap">
+      <table class="visit-board-table">
+        <colgroup>
+          <col class="visit-board-first-col">
+          {% for day in board.days %}
+          <col class="visit-board-day-col">
+          {% endfor %}
+        </colgroup>
+        <tbody>
+          {% for row in tech.roster_rows %}
+          <tr class="visit-board-row{% if row.placement_missing %} visit-board-row--fallback{% endif %}">
+            <th scope="row" class="visit-board-first-col">{{ row.title }}</th>
+            {% for cell in row.cells %}
+            <td class="visit-board-cell visit-board-day-col{% if cell.background_planned %} visit-board-cell--planned{% endif %}">
+              {% for icon in cell.icons %}
+              <span class="visit-board-icon visit-board-icon--{{ icon.value }}" title="{{ icon.value }}"></span>
+              {% endfor %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          {% if tech.visited_rows %}
+          <tr class="visit-board-section-sep">
+            <th colspan="{{ board.days|length + 1 }}">Посещённые вне текущего закрепления</th>
+          </tr>
+          {% for row in tech.visited_rows %}
+          <tr class="visit-board-row visit-board-row--visited{% if row.placement_missing %} visit-board-row--fallback{% endif %}">
+            <th scope="row" class="visit-board-first-col">{{ row.title }}</th>
+            {% for cell in row.cells %}
+            <td class="visit-board-cell visit-board-day-col{% if cell.background_planned %} visit-board-cell--planned{% endif %}">
+              {% for icon in cell.icons %}
+              <span class="visit-board-icon visit-board-icon--{{ icon.value }}" title="{{ icon.value }}"></span>
+              {% endfor %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+  {% endif %}
+{% endblock %}

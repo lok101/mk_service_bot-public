@@ -1,0 +1,17 @@
+# Set DOMAIN in .env (e.g. bot.example.com). For local HTTP-only testing use DOMAIN=:80
+{$DOMAIN} {
+	@admin_post {
+		path /admin*
+		method POST
+	}
+	@telegram_webhook path {$TELEGRAM_WEBHOOK_PATH:/webhooks/telegram}*
+
+	request_body @admin_post {
+		max_size 1MB
+	}
+	request_body @telegram_webhook {
+		max_size 1MB
+	}
+
+	reverse_proxy app:{$API_PORT:8000}
+}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Парк{% endblock %}
+{% block page_title %}Парк аппаратов{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    <a class="admin-btn" href="/admin/machines/install">Установка</a>
+    <a class="admin-btn" href="/admin/coffee-machine-models">Модели</a>
+    <a class="admin-btn" href="/admin/stand-types">Типы стоек</a>
+    <a class="admin-btn" href="/admin/stand-colors">Цвета стоек</a>
+  </p>
+
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin">
+      <div class="admin-filters" id="park-filters">
+        <label>Поиск (код / точка)
+          <input type="search" id="park-search" placeholder="код или имя" autocomplete="off">
+        </label>
+        <label>Тип
+          <select id="park-kind-filter">
+            <option value="all">Все</option>
+            <option value="coffee">coffee</option>
+            <option value="snack">snack</option>
+            <option value="micro_market">micro_market</option>
+          </select>
+        </label>
+        <label>Город
+          <select id="park-city-filter">
+            <option value="all">Все</option>
+          </select>
+        </label>
+        <label>Компания
+          <select id="park-company-filter">
+            <option value="all">Все</option>
+          </select>
+        </label>
+        <p class="admin-muted">Показано <span id="park-visible-count">0</span> из
+          <span id="park-total-count">{{ rows|length }}</span></p>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="park-machines-table">
+        <thead>
+          <tr>
+            <th scope="col">Код</th>
+            <th scope="col">Тип</th>
+            <th scope="col">Точка</th>
+            <th scope="col">Город</th>
+            <th scope="col">Компания</th>
+            <th scope="col">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr
+            data-machine-id="{{ row.machine_id }}"
+            data-location-name="{{ row.location_name or '' }}"
+            data-city="{{ row.city or '' }}"
+            data-company-name="{{ row.company_name }}"
+            data-kind="{{ row.kind }}"
+          >
+            <td>
+              <a class="admin-entity-link"
+                 href="/admin/machines/{{ row.machine_id }}">{{ row.machine_id }}</a>
+            </td>
+            <td>{{ row.kind }}</td>
+            <td>
+              {% if row.location_id %}
+                <a class="admin-entity-link"
+                   href="/admin/locations/{{ row.location_id }}">{{ row.location_name or row.location_id }}</a>
+              {% else %}
+                {{ row.location_name or "—" }}
+              {% endif %}
+            </td>
+            <td>{{ row.city or "—" }}</td>
+            <td>{{ row.company_name or "—" }}</td>
+            <td>
+              {% if row.status == "active_on_site" %}
+                <a class="admin-btn" href="/admin/machines/{{ row.machine_id }}/relocate">Релокация</a>
+              {% elif row.status == "in_storage" %}
+                <a class="admin-btn" href="/admin/machines/{{ row.machine_id }}/place">Со склада</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6">Нет аппаратов</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('park.js') }}" defer></script>
+{% endblock %}

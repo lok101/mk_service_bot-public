@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Аппарат {{ machine.machine_id.value }}{% endblock %}
+{% block page_title %}Аппарат {{ machine.machine_id.value }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/machines">← Парк</a></p>
+
+  <p class="admin-muted">{{ display_name }}</p>
+  <p class="admin-muted">Компания: {{ company_name or "—" }}</p>
+
+  <form method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}?tab={{ active_tab }}"
+        id="machine-profile-form">
+    <label>
+      <input type="checkbox"
+             name="include_in_visit_photo_review"
+             {% if machine.include_in_visit_photo_review %}checked{% endif %}>
+      Участвует в разборе фото
+    </label>
+
+    {% if machine.kind.value == 'coffee' %}
+    <div class="admin-workspace-tabs" role="tablist" aria-label="Ядра параметров аппарата">
+      <button type="button"
+              class="admin-workspace-tab"
+              data-tab="monitoring"
+              aria-selected="{% if active_tab == 'monitoring' %}true{% else %}false{% endif %}">Мониторинг</button>
+      <button type="button"
+              class="admin-workspace-tab"
+              data-tab="equipment"
+              aria-selected="{% if active_tab == 'equipment' %}true{% else %}false{% endif %}">Оборудование</button>
+    </div>
+
+    <div class="admin-workspace-panel" data-tab="monitoring"{% if active_tab != 'monitoring' %} hidden{% endif %}>
+      <label>
+        <input type="checkbox"
+               name="include_in_no_sales_monitoring"
+               {% if machine.include_in_no_sales_monitoring %}checked{% endif %}>
+        Включать в логи отсутствия продаж
+      </label>
+      <label>
+        <input type="checkbox"
+               name="create_visit_on_no_sales"
+               {% if machine.create_visit_on_no_sales %}checked{% endif %}>
+        Ставить визит при отсутствии продаж
+      </label>
+    </div>
+
+    <div class="admin-workspace-panel" data-tab="equipment"{% if active_tab != 'equipment' %} hidden{% endif %}>
+      {% if error %}
+      <p class="admin-error">{{ error }}</p>
+      {% endif %}
+      <label>Модель кофемашины
+        <select name="coffee_machine_model_id" id="coffee-machine-model">
+          <option value="">—</option>
+          {% for model in coffee_models %}
+          <option value="{{ model.model_id }}"
+                  data-floor="{{ '1' if model.floor_standing else '0' }}"
+                  {% if machine.coffee_machine_model_id == model.model_id %}selected{% endif %}>
+            {{ model.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+      <div id="coffee-stand-fields"{% if hide_stands %} hidden{% endif %}>
+        <label>Тип стойки
+          <select name="stand_type_id" id="stand-type"{% if hide_stands %} disabled{% endif %}>
+            <option value="">—</option>
+            {% for item in stand_types %}
+            <option value="{{ item.stand_type_id }}"
+                    {% if machine.stand_type_id == item.stand_type_id %}selected{% endif %}>
+              {{ item.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Цвет стойки
+          <select name="stand_color_id" id="stand-color"{% if hide_stands %} disabled{% endif %}>
+            <option value="">—</option>
+            {% for item in stand_colors %}
+            <option value="{{ item.stand_color_id }}"
+                    {% if machine.stand_color_id == item.stand_color_id %}selected{% endif %}>
+              {{ item.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <script>
+        (function () {
+          var model = document.getElementById("coffee-machine-model");
+          var stands = document.getElementById("coffee-stand-fields");
+          if (!model || !stands) return;
+          function sync() {
+            var option = model.options[model.selectedIndex];
+            var floor = option && option.getAttribute("data-floor") === "1";
+            stands.hidden = !!floor;
+            var fields = stands.querySelectorAll("select");
+            for (var i = 0; i < fields.length; i++) fields[i].disabled = !!floor;
+          }
+          model.addEventListener("change", sync);
+          sync();
+        })();
+      </script>
+    </div>
+
+    <script>
+      (function () {
+        var form = document.getElementById("machine-profile-form");
+        var tabs = document.querySelectorAll(".admin-workspace-tab");
+        var panels = document.querySelectorAll(".admin-workspace-panel");
+        if (!form || !tabs.length) return;
+        function selectTab(selected) {
+          tabs.forEach(function (item) {
+            item.setAttribute(
+              "aria-selected",
+              item.getAttribute("data-tab") === selected ? "true" : "false"
+            );
+          });
+          panels.forEach(function (panel) {
+            if (panel.getAttribute("data-tab") === selected) {
+              panel.removeAttribute("hidden");
+            } else {
+              panel.setAttribute("hidden", "");
+            }
+          });
+          var url = new URL(document.URL);
+          url.searchParams.set("tab", selected);
+          window.history.replaceState({}, "", url.toString());
+          form.setAttribute(
+            "action",
+            "/admin/machines/{{ machine.machine_id.value }}?tab=" + encodeURIComponent(selected)
+          );
+        }
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            selectTab(tab.getAttribute("data-tab"));
+          });
+        });
+      })();
+    </script>
+    {% else %}
+    <label>
+      <input type="checkbox"
+             name="include_in_no_sales_monitoring"
+             {% if machine.include_in_no_sales_monitoring %}checked{% endif %}>
+      Включать в логи отсутствия продаж
+    </label>
+    <label>
+      <input type="checkbox"
+             name="create_visit_on_no_sales"
+             {% if machine.create_visit_on_no_sales %}checked{% endif %}>
+      Ставить визит при отсутствии продаж
+    </label>
+    {% endif %}
+
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

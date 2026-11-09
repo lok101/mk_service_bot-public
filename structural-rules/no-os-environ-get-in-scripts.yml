@@ -1,0 +1,14 @@
+id: no-os-environ-get-in-scripts
+language: python
+severity: error
+message: os.environ.get in scripts/ needs an explicit structural ignore.
+files:
+  - scripts/**/*.py
+ignores:
+  - scripts/agent_job.py
+  - scripts/agent_adr_number_lib/paths.py
+  - scripts/tracker_issue_lib/cli.py
+  - scripts/tracker_issue_lib/time_display.py
+  - scripts/counterfactual_exit_warehouse.py
+rule:
+  pattern: os.environ.get($$$)

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}История инцидентов{% endblock %}
+{% block page_title %}История инцидентов «нет продаж»{% endblock %}
+{% block body %}
+  <form method="get" action="/admin/machine-incidents/history" class="machine-incidents-history-form">
+    <label>С
+      <input type="date" name="from" value="{{ raw_from }}">
+    </label>
+    <label>По
+      <input type="date" name="to" value="{{ raw_to }}">
+    </label>
+    <button type="submit">Показать</button>
+  </form>
+
+  {% if not rows %}
+  <p class="admin-muted">За выбранный период записей нет.</p>
+  {% else %}
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin" id="incident-history-chrome-pin">
+      <div class="admin-filters" id="incident-history-filters">
+        <label>Поиск
+          <input type="search"
+                 id="incident-history-search"
+                 placeholder="аппарат или техник"
+                 autocomplete="off">
+        </label>
+        <label>Техник
+          <select id="incident-history-technician-filter">
+            <option value="all">Все</option>
+            {% for choice in technician_choices %}
+            <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Причина без задачи
+          <select id="incident-history-reason-filter">
+            <option value="all">Все</option>
+            {% for choice in reason_choices %}
+            <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Как снят
+          <select id="incident-history-clear-filter">
+            <option value="all">Все</option>
+            {% for choice in clear_kind_choices %}
+            <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <p class="admin-muted">Показано
+          <span id="incident-history-visible-count">{{ rows|length }}</span>
+          из <span id="incident-history-total-count">{{ rows|length }}</span></p>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="incident-history-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort-key="machine-id" data-sort-type="text" scope="col">Код</th>
+            <th class="sortable" data-sort-key="name" data-sort-type="text" scope="col">Имя</th>
+            <th class="sortable" data-sort-key="opened" data-sort-type="moment" scope="col">Открыт</th>
+            <th class="sortable" data-sort-key="cleared" data-sort-type="moment" scope="col">Снят</th>
+            <th class="sortable" data-sort-key="hours" data-sort-type="number" scope="col">Часов</th>
+            <th class="sortable" data-sort-key="technician" data-sort-type="text" scope="col">Техник</th>
+            <th class="sortable" data-sort-key="reason" data-sort-type="text" scope="col">Причина без задачи</th>
+            <th class="sortable" data-sort-key="clear-kind" data-sort-type="text" scope="col">Как снят</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr
+            data-machine-id="{{ row.machine_id }}"
+            data-name="{{ row.name }}"
+            data-opened="{{ row.opened_sort }}"
+            data-cleared="{{ row.cleared_sort }}"
+            data-hours="{{ row.duration_sort }}"
+            data-technician="{{ row.technician }}"
+            data-reason="{{ row.reason }}"
+            data-clear-kind="{{ row.clear_kind }}"
+          >
+            <th scope="row">{{ row.machine_id }}</th>
+            <td>{{ row.name }}</td>
+            <td>{{ row.opened_at }}</td>
+            <td>{{ row.cleared_at }}</td>
+            <td>{{ row.duration_hours }}</td>
+            <td>{{ row.technician }}</td>
+            <td>{{ row.reason }}</td>
+            <td>{{ row.clear_kind }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('machine-incidents-history.js') }}" defer></script>
+{% endblock %}

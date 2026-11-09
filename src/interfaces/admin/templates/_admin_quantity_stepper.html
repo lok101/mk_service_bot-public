@@ -1,0 +1,42 @@
+{# Shared admin quantity stepper (ADR-0043).
+   Expected: name, value, min, max, aria_label.
+   Optional: input_class, integer (truthy → data-integer=1, step=1),
+   locked (truthy → disabled chrome, 📦 instead of digit; no named input). #}
+{% set _min = min if min is defined else 0 %}
+{% set _max = max if max is defined else 50 %}
+{% set _integer = integer if integer is defined else true %}
+{% set _input_class = input_class if input_class is defined else "admin-cell-input" %}
+{% set _locked = locked if locked is defined else false %}
+{% if _locked %}
+<span class="admin-qty-stepper admin-qty-stepper-locked"
+      data-min="{{ _min }}"
+      data-max="{{ _max }}"
+      {% if _integer %}data-integer="1"{% endif %}>
+  <button type="button" class="admin-qty-btn" data-dir="-1" aria-label="Меньше"
+          tabindex="-1" disabled>−</button>
+  <span class="admin-qty-locked-glyph" aria-label="{{ aria_label }} locked">📦</span>
+  <button type="button" class="admin-qty-btn" data-dir="1" aria-label="Больше"
+          tabindex="-1" disabled>+</button>
+</span>
+<input type="hidden" name="{{ name }}" value="0">
+{% else %}
+<span class="admin-qty-stepper"
+      data-min="{{ _min }}"
+      data-max="{{ _max }}"
+      {% if _integer %}data-integer="1"{% endif %}>
+  <button type="button" class="admin-qty-btn" data-dir="-1" aria-label="Меньше"
+          tabindex="-1">−</button>
+  <input class="admin-qty-input{% if _input_class %} {{ _input_class }}{% endif %}"
+         name="{{ name }}"
+         type="number"
+         inputmode="numeric"
+         min="{{ _min }}"
+         max="{{ _max }}"
+         step="1"
+         value="{{ value }}"
+         aria-label="{{ aria_label }}"
+         {% if _integer %}data-integer="1"{% endif %}>
+  <button type="button" class="admin-qty-btn" data-dir="1" aria-label="Больше"
+          tabindex="-1">+</button>
+</span>
+{% endif %}

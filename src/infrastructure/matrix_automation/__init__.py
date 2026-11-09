@@ -1,0 +1,1 @@
+"""Matrix automation infrastructure adapters."""

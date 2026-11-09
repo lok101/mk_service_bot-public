@@ -1,0 +1,14 @@
+id: no-httpx-outside-infra
+language: python
+severity: error
+message: httpx belongs in infrastructure.
+files:
+  - src/application/**/*.py
+  - src/domain/**/*.py
+  - src/interfaces/**/*.py
+rule:
+  any:
+    - pattern: import httpx
+    - pattern: import httpx as $$$
+    - pattern: from httpx import $$$
+    - pattern: from httpx.$$$ import $$$

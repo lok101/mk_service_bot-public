@@ -1,0 +1,37 @@
+{# Micromarket planogram price column (UI-ADR-0064).
+   Required via caller `{% with %}` / outer scope: idx, price_rub (= row.price_rub).
+   Optional: price_origin, legacy_code, domain_product_id (for manual reset),
+   domain_price_display (formula on the fly; «—» if unknown).
+   Do not rely on row.* inside this partial — pass scalars explicitly. #}
+<td{% if price_origin is defined and price_origin == 'manual' %} class="planogram-price-manual"{% endif %}>
+  <div class="planogram-price-cell">
+    <input class="admin-cell-input planogram-price-input"
+           name="price_rub-{{ idx }}"
+           type="number"
+           min="1"
+           step="1"
+           value="{{ price_rub }}"
+           aria-label="{% if price_origin is defined and price_origin == 'manual' %}Установленная цена{% else %}price_rub{% endif %}">
+    {% if price_origin is defined and price_origin == 'manual' %}
+    {% set reset_code = legacy_code or domain_product_id %}
+    {% if reset_code %}
+    <input type="hidden"
+           form="micromarket-reset-price-{{ reset_code }}"
+           name="product_code"
+           value="{{ reset_code }}">
+    <button type="submit"
+            class="planogram-price-reset"
+            form="micromarket-reset-price-{{ reset_code }}"
+            aria-label="К расчётной"
+            title="К расчётной">➡️</button>
+    <input class="admin-cell-input planogram-price-input planogram-price-domain"
+           type="text"
+           value="{{ domain_price_display if domain_price_display is defined else '—' }}"
+           readonly
+           tabindex="-1"
+           aria-label="Цена домена"
+           title="Цена домена (закуп × наценка × множители)">
+    {% endif %}
+    {% endif %}
+  </div>
+</td>

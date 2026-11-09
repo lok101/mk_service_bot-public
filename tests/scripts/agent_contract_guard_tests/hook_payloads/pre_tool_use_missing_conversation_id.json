@@ -1,0 +1,9 @@
+{
+  "generation_id": "gen-1",
+  "hook_event_name": "preToolUse",
+  "workspace_roots": ["/repo"],
+  "tool_name": "Write",
+  "tool_input": {"path": "src/allowed.py", "contents": "ok"},
+  "tool_use_id": "tool-1",
+  "cwd": "/repo"
+}

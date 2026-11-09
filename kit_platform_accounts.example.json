@@ -1,0 +1,20 @@
+[
+  {
+    "account_key": "vending-demo-parent",
+    "company_id": 1001,
+    "platform": "kit_vending",
+    "kit_company_id": 1001,
+    "role": "sales_poll",
+    "login": "API_LOGIN",
+    "password": "SECRET"
+  },
+  {
+    "account_key": "vending-demo-child",
+    "company_id": 1002,
+    "platform": "kit_vending",
+    "kit_company_id": 1002,
+    "role": "catalog",
+    "login": "API_LOGIN_CHILD",
+    "password": "SECRET"
+  }
+]

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{{ group_title }}{% endblock %}
+{% block page_title %}{{ group_title }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a class="admin-entity-link" href="{{ groups_href }}">← Группы</a></p>
+
+  <form method="post" action="/admin/visit-photo-review/groups/{{ group_id }}"
+        enctype="multipart/form-data" id="group-edit-form">
+    <section aria-label="Фото группы">
+      <div class="demo-photo-block">
+        {% if has_avatar %}
+        <img class="demo-group-thumb demo-group-thumb--lg" id="editor-photo" alt="Фото группы"
+             src="{{ avatar_href }}">
+        <img class="demo-group-thumb demo-group-thumb--lg" id="editor-photo-empty" alt="Нет фото"
+             src="{{ default_avatar }}" hidden>
+        {% else %}
+        <img class="demo-group-thumb demo-group-thumb--lg" id="editor-photo" alt="Фото группы" hidden>
+        <img class="demo-group-thumb demo-group-thumb--lg" id="editor-photo-empty" alt="Нет фото"
+             src="{{ default_avatar }}">
+        {% endif %}
+        <label>Загрузить
+          <input type="file" name="photo" id="editor-photo-input" accept="image/jpeg,image/png,image/webp">
+        </label>
+      </div>
+    </section>
+
+    {% if not photo_only %}
+    <section aria-labelledby="defects-heading" id="defects-section">
+      <h2 id="defects-heading">Проблемы фото</h2>
+      <div class="demo-defect-rows" id="defect-rows">
+        {% if defects %}
+        {% for defect in defects %}
+        <div class="demo-defect-row">
+          <input type="hidden" name="defect_code" value="{{ defect.code }}">
+          <label>Подпись<input name="defect_label" type="text" autocomplete="off" value="{{ defect.label }}"></label>
+          <button type="button" class="admin-btn" data-remove>Удалить</button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="admin-muted" id="defects-empty-hint">Проблем пока нет — на разборе блок «Ошибки техника» будет пустым.</p>
+        {% endif %}
+      </div>
+      <button type="button" class="admin-btn" id="add-defect">Добавить проблему</button>
+    </section>
+    {% endif %}
+
+    {% call admin_save_bar() %}
+        <button type="submit" class="admin-btn">Сохранить</button>
+    {% endcall %}
+  </form>
+
+  <script>
+    (function () {
+      var input = document.getElementById("editor-photo-input");
+      var img = document.getElementById("editor-photo");
+      var empty = document.getElementById("editor-photo-empty");
+      if (input && img && empty) {
+        input.addEventListener("change", function () {
+          var file = input.files && input.files[0];
+          if (!file) return;
+          img.src = URL.createObjectURL(file);
+          img.hidden = false;
+          empty.hidden = true;
+        });
+      }
+
+      var rowsRoot = document.getElementById("defect-rows");
+      var addBtn = document.getElementById("add-defect");
+      if (!rowsRoot || !addBtn) return;
+
+      function bindRemove(row) {
+        var btn = row.querySelector("[data-remove]");
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+          row.remove();
+          if (!rowsRoot.querySelector(".demo-defect-row")) {
+            var hint = document.createElement("p");
+            hint.className = "admin-muted";
+            hint.id = "defects-empty-hint";
+            hint.textContent = "Проблем пока нет — на разборе блок «Ошибки техника» будет пустым.";
+            rowsRoot.appendChild(hint);
+          }
+        });
+      }
+
+      rowsRoot.querySelectorAll(".demo-defect-row").forEach(bindRemove);
+
+      addBtn.addEventListener("click", function () {
+        var hint = document.getElementById("defects-empty-hint");
+        if (hint) hint.remove();
+        var row = document.createElement("div");
+        row.className = "demo-defect-row";
+        row.innerHTML =
+          '<label>Подпись<input name="defect_label" type="text" autocomplete="off"></label>' +
+          '<button type="button" class="admin-btn" data-remove>Удалить</button>';
+        bindRemove(row);
+        rowsRoot.appendChild(row);
+      });
+    })();
+  </script>
+{% endblock %}

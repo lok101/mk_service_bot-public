@@ -1,0 +1,10 @@
+<nav class="admin-workspace-tabs" role="tablist" aria-label="Товары">
+  <a class="admin-workspace-tab"
+     href="/admin/domain-products"
+     role="tab"
+     aria-selected="{% if domain_products_tab == 'products' %}true{% else %}false{% endif %}">Товары</a>
+  <a class="admin-workspace-tab"
+     href="/admin/domain-products/coffee-ingredients"
+     role="tab"
+     aria-selected="{% if domain_products_tab == 'coffee_ingredients' %}true{% else %}false{% endif %}">Кофейные ингредиенты</a>
+</nav>

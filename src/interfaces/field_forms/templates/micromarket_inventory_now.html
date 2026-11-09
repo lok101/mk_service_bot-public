@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Инвентаризация</title>
+  <link rel="stylesheet" href="{{ static_href('field_form.css') }}">
+</head>
+<body class="field-form">
+  <h1>Инвентаризация</h1>
+  {% if freeze_message %}
+  <p class="field-form__freeze">{{ freeze_message }}</p>
+  {% endif %}
+  {% if error %}
+  <p class="field-form__error">{{ error }}</p>
+  {% endif %}
+  {% if success %}
+  <p class="field-form__success">Принято</p>
+  {% else %}
+  <form method="post" action="/forms/micromarket-inventory/now" class="field-form__form" id="field-form-inventory">
+    <input type="hidden" name="token" value="{{ token }}">
+    {% for section in sections %}
+    <section class="field-form__section">
+      <h2>{{ section.title }}</h2>
+      {% for line in section.lines %}
+      <div class="field-form__line" data-line-code="{{ line.code }}">
+        <span class="field-form__name">{{ line.name }}</span>
+        <div class="field-form__controls">
+          <input
+            class="field-form__qty"
+            type="text"
+            inputmode="numeric"
+            name="qty_{{ line.code }}"
+            value="{{ line.value }}"
+            autocomplete="off"
+            data-qty-input
+            {% if line.qty_rule %}
+            data-min="{{ line.qty_rule.min_attr }}"
+            data-max="{{ line.qty_rule.max_attr }}"
+            {% if line.qty_rule.integer %}data-integer="1"{% endif %}
+            {% if line.qty_rule.required %}data-required="1"{% endif %}
+            {% endif %}
+            {% if read_only %}disabled{% endif %}
+          >
+          {% if not read_only %}
+          <button
+            type="button"
+            class="field-form__empty"
+            data-empty-toggle
+            aria-pressed="false"
+          >Пусто</button>
+          {% endif %}
+        </div>
+        <p class="field-form__field-error" data-field-error hidden></p>
+      </div>
+      {% endfor %}
+    </section>
+    {% endfor %}
+    {% if not read_only %}
+    <button class="field-form__submit" type="submit" data-submit>Отправить</button>
+    {% endif %}
+  </form>
+  {% if not read_only %}
+  <script src="{{ static_href('inventory_qty_parse.js') }}" defer></script>
+  <script src="{{ static_href('field_form.js') }}" defer></script>
+  {% endif %}
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,7 @@
+id: no-os-environ-subscript-in-scripts
+valid:
+  - "import os"
+  - "os.environ['X'] = '1'"
+invalid:
+  - "x = os.environ['MONGODB_URI']"
+  - "foo(os.environ['X'])"

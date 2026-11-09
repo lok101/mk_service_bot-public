@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo: SKU матрицы</title>
+  <link rel="stylesheet" href="/admin/static/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="admin-layout">
+      <aside class="admin-app-sidebar" id="admin-app-sidebar" data-collapsed="false">
+        <button type="button" class="admin-sidebar-toggle" aria-label="Меню">
+          <span class="admin-sidebar-icon admin-icon-menu" aria-hidden="true"></span>
+        </button>
+        <nav class="admin-sidebar-nav" aria-label="Admin">
+          <a class="admin-sidebar-link" href="#">
+            <span class="admin-sidebar-icon admin-icon-roster" aria-hidden="true"></span>
+            <span class="admin-sidebar-label">Roster</span>
+          </a>
+          <a class="admin-sidebar-link" href="#">
+            <span class="admin-sidebar-icon admin-icon-master-data" aria-hidden="true"></span>
+            <span class="admin-sidebar-label">Парк</span>
+          </a>
+          <a class="admin-sidebar-link is-active" href="#">
+            <span class="admin-sidebar-icon admin-icon-master-data" aria-hidden="true"></span>
+            <span class="admin-sidebar-label">SKU матрицы</span>
+          </a>
+        </nav>
+        <form method="post" action="#" class="admin-sidebar-logout">
+          <button type="submit" class="admin-btn admin-btn-secondary">Выйти</button>
+        </form>
+      </aside>
+      <div class="admin-main">
+        <header class="admin-app-header">
+          <h1>SKU матрицы</h1>
+        </header>
+
+        <p class="admin-hint">
+          Строки — снековые папки МойСклад. Пустая ёмкость сохраняется как 0;
+          Kit/build требует ёмкость &gt; 0.
+        </p>
+
+        <div class="admin-filters" id="matrix-sku-filters" aria-label="Фильтр статуса МС">
+          <label>Статус
+            <select id="matrix-sku-archived-filter">
+              <option value="active" selected>✅ не в архиве</option>
+              <option value="archived">❌ архив</option>
+              <option value="all">Все</option>
+            </select>
+          </label>
+        </div>
+
+        <form method="post" action="#">
+          <input type="hidden" name="action" value="bulk_save">
+          <div class="admin-table-wrap">
+            <table class="admin-roster" id="matrix-sku-catalog-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="admin-sku-status-col"></th>
+                  <th scope="col">Код</th>
+                  <th scope="col">Имя</th>
+                  <th scope="col">Ёмкость</th>
+                  <th scope="col">Множитель</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="admin-sku-row-needs-capacity" data-product-code="1616" data-archived="false">
+                  <td class="admin-sku-status-col">✅</td>
+                  <td>
+                    <input class="admin-cell-input" name="product_code" value="1616" readonly>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="display_name" value="Чудо" required>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="capacity" type="number" min="0" step="1" value="">
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="product_multiplier" value="1" required>
+                  </td>
+                </tr>
+                <tr data-product-code="9999" data-archived="false">
+                  <td class="admin-sku-status-col">✅</td>
+                  <td>
+                    <input class="admin-cell-input" name="product_code" value="9999" readonly>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="display_name" value="Snack B" required>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="capacity" type="number" min="0" step="1" value="5">
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="product_multiplier" value="1" required>
+                  </td>
+                </tr>
+                <tr data-product-code="4242" data-archived="false">
+                  <td class="admin-sku-status-col">✅</td>
+                  <td>
+                    <input class="admin-cell-input" name="product_code" value="4242" readonly>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="display_name" value="Батончик" required>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="capacity" type="number" min="0" step="1" value="10">
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="product_multiplier" value="1.2" required>
+                  </td>
+                </tr>
+                <tr data-product-code="OLD" data-archived="true">
+                  <td class="admin-sku-status-col">❌</td>
+                  <td>
+                    <input class="admin-cell-input" name="product_code" value="OLD" readonly>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="display_name" value="Archived snack" required>
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="capacity" type="number" min="0" step="1" value="2">
+                  </td>
+                  <td>
+                    <input class="admin-cell-input" name="product_multiplier" value="1" required>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-save-bar">
+            <div class="admin-save-bar-inner">
+              <button type="submit" class="admin-btn">Сохранить</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="/admin/static/admin_sidebar.js" defer></script>
+    <script src="/admin/static/matrix_sku_catalog.js" defer></script>
+  </div>
+</body>
+</html>

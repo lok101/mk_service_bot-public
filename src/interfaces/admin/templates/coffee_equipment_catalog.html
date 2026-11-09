@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/machines">← Парк</a></p>
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+
+  <form method="post" action="{{ form_action }}">
+    <input type="hidden" name="intent" value="create">
+    <label>Название
+      <input type="text" name="name" required>
+    </label>
+    {% if show_floor %}
+    <label>
+      <input type="checkbox" name="floor_standing">
+      Напольная
+    </label>
+    {% endif %}
+    <button type="submit">Добавить</button>
+  </form>
+
+  <div class="admin-table-wrap">
+    <table class="admin-roster">
+      <thead>
+        <tr>
+          <th scope="col">Название</th>
+          {% if show_floor %}<th scope="col">Напольная</th>{% endif %}
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <form method="post" action="{{ form_action }}" id="save-{{ row.entry_id }}">
+              <input type="hidden" name="intent" value="save">
+              <input type="hidden" name="entry_id" value="{{ row.entry_id }}">
+              <input type="text" name="name" value="{{ row.name }}" required>
+            </form>
+          </td>
+          {% if show_floor %}
+          <td>
+            <label>
+              <input type="checkbox" name="floor_standing" form="save-{{ row.entry_id }}"
+                     {% if row.floor_standing %}checked{% endif %}>
+            </label>
+          </td>
+          {% endif %}
+          <td>
+            <button type="submit" form="save-{{ row.entry_id }}">Сохранить</button>
+            <form method="post" action="{{ form_action }}">
+              <input type="hidden" name="intent" value="delete">
+              <input type="hidden" name="entry_id" value="{{ row.entry_id }}">
+              <button type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

@@ -1,0 +1,7 @@
+id: no-os-getenv-in-scripts
+valid:
+  - "import os"
+  - "x = args.token"
+invalid:
+  - "os.getenv('MONGODB_URI')"
+  - "raw = os.getenv(\"X\")"

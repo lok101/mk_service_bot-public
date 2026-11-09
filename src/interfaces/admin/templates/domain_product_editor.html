@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{% if editor.is_new %}Новый товар{% else %}{{ editor.name }}{% endif %}{% endblock %}
+{% block page_title %}{% if editor.is_new %}Новый товар{% else %}{{ editor.name }}{% endif %}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/domain-products">← Товары</a></p>
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p>Номер <span id="domain-product-number">{{ editor.number }}</span></p>
+
+  <form method="post" action="{% if editor.is_new %}/admin/domain-products/new{% else %}/admin/domain-products/{{ editor.domain_product_id }}{% endif %}">
+    <label class="admin-entity-name-field">Название
+      <input name="name" type="text" value="{{ editor.name }}">
+    </label>
+    {% if not editor.is_new %}
+    <section id="catalog-card-block" class="admin-catalog-panel">
+      <h2>Карточка МойСклада</h2>
+      <div id="catalog-card-summary" class="admin-catalog-link">
+        {% if not editor.catalog_code %}
+        <p>Нет связанного товара</p>
+        {% elif editor.state == "порвана" %}
+        <p>{{ editor.catalog_code }} порвана</p>
+        {% else %}
+        <p id="catalog-card-name">{{ editor.catalog_name }}{% if editor.state == "архив" %} архив{% endif %}</p>
+        <p id="catalog-card-code">{{ editor.catalog_code }}</p>
+        {% endif %}
+      </div>
+      {% if editor.catalog_fetched_at %}
+      <p id="catalog-fetched-at">{{ editor.catalog_fetched_at }}</p>
+      {% endif %}
+      {% if editor.catalog_sync_error %}
+      <p id="catalog-sync-error" class="admin-error">{{ editor.catalog_sync_error }}</p>
+      {% endif %}
+      {% if editor.catalog_refresh_enabled %}
+      <button type="submit" name="action" value="refresh-catalog">Обновить каталог</button>
+      {% else %}
+      <p>Обновление из МойСклада не настроено</p>
+      {% endif %}
+      <label>Поиск
+        <input id="catalog-card-query" type="search" autocomplete="off">
+      </label>
+      <p id="catalog-card-exact"></p>
+      <table id="catalog-card-window" hidden>
+        <thead>
+          <tr><th>Имя</th><th>Код</th><th>Статус</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="catalog-card-hint"></p>
+      <label>Код карточки
+        <input name="catalog_code" type="text" value="{{ editor.catalog_code }}">
+      </label>
+    </section>
+    {% if editor.show_procurement %}
+    <section id="procurement-mirror-block" class="admin-catalog-panel">
+      <h2>Последняя приёмка</h2>
+      <p>Поставщик: {{ editor.procurement_supplier }}</p>
+      <p>Цена: {{ editor.procurement_price }}</p>
+      <p>Момент: {{ editor.procurement_moment }}</p>
+    </section>
+    {% endif %}
+    {% endif %}
+    {% call admin_save_bar(split=not editor.is_new) %}
+        {% if not editor.is_new %}
+        <button type="button" id="domain-product-hide" class="admin-btn-danger">Удалить</button>
+        {% endif %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}
+{% block scripts %}
+{% if not editor.is_new %}
+<script src="{{ static_href('domain_product_editor.js') }}" defer></script>
+{% endif %}
+{% endblock %}

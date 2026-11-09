@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo: сводка сверки</title>
+  <link rel="stylesheet" href="../../../../src/interfaces/admin/static/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-app-header">
+      <nav class="admin-app-header-nav" aria-label="Admin">
+        <a class="admin-btn" href="#">Сверка</a>
+      </nav>
+      <h1>Анализ сверки (демо сводки)</h1>
+      <form action="#"><button type="submit" class="admin-btn admin-btn-secondary">Выйти</button></form>
+    </header>
+
+    <p class="admin-muted">Фикстура: итоги в tfoot под «Недостача» и «Сверх нормы».</p>
+
+    <section class="settlement-analysis-aggregate" data-aggregate-block="1" aria-label="Агрегация">
+      <div class="settlement-sku-group" data-sku-group="loss">
+        <div class="admin-table-wrap settlement-sku-wrap">
+          <table class="settlement-sku-table">
+            <colgroup>
+              <col class="settlement-sku-col-name">
+              <col class="settlement-sku-col-num">
+              <col class="settlement-sku-col-num">
+              <col class="settlement-sku-col-pct">
+              <col class="settlement-sku-col-money">
+              <col class="settlement-sku-col-money">
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col" class="settlement-sku-name">Товар</th>
+                <th scope="col">Расход</th>
+                <th scope="col">Итог</th>
+                <th scope="col">%</th>
+                <th scope="col">Недостача</th>
+                <th scope="col">Сверх нормы</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="settlement-sku-name">Кофе зерно</td>
+                <td>56411</td>
+                <td>-1067</td>
+                <td>2</td>
+                <td>18839</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td class="settlement-sku-name">Сахар</td>
+                <td>12000</td>
+                <td>-40</td>
+                <td>0</td>
+                <td>80</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td class="settlement-sku-name">Стаканы 180</td>
+                <td>9800</td>
+                <td>-210</td>
+                <td>2</td>
+                <td>630</td>
+                <td>42</td>
+              </tr>
+              <tr>
+                <td class="settlement-sku-name">Размешиватель</td>
+                <td>4300</td>
+                <td>12</td>
+                <td>н/д</td>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="settlement-sku-totals">
+                <td colspan="4"></td>
+                <td data-sku-shortage="loss">19549</td>
+                <td data-sku-excess="loss">42</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="settlement-sku-group" data-sku-group="recoverable">
+        <div class="admin-table-wrap settlement-sku-wrap">
+          <table class="settlement-sku-table">
+            <colgroup>
+              <col class="settlement-sku-col-name">
+              <col class="settlement-sku-col-num">
+              <col class="settlement-sku-col-num">
+              <col class="settlement-sku-col-pct">
+              <col class="settlement-sku-col-money">
+              <col class="settlement-sku-col-money">
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col" class="settlement-sku-name">Товар</th>
+                <th scope="col">Расход</th>
+                <th scope="col">Итог</th>
+                <th scope="col">%</th>
+                <th scope="col">Недостача</th>
+                <th scope="col">Сверх нормы</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="settlement-sku-name">Капучино смесь</td>
+                <td>2100</td>
+                <td>-85</td>
+                <td>4</td>
+                <td>2550</td>
+                <td>420</td>
+              </tr>
+              <tr>
+                <td class="settlement-sku-name">Шоколад</td>
+                <td>800</td>
+                <td>-16</td>
+                <td>2</td>
+                <td>480</td>
+                <td>0</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="settlement-sku-totals">
+                <td colspan="4"></td>
+                <td data-sku-shortage="recoverable">3030</td>
+                <td data-sku-excess="recoverable">420</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

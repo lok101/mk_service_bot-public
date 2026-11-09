@@ -1,0 +1,12 @@
+[
+  {"raw": "15с", "ok": true, "value": "15"},
+  {"raw": "15 шт", "ok": true, "value": "15"},
+  {"raw": "pcs15", "ok": true, "value": "15"},
+  {"raw": "7", "ok": true, "value": "7"},
+  {"raw": " 3.5 ", "ok": true, "value": "3.5"},
+  {"raw": "3,5", "ok": true, "value": "3.5"},
+  {"raw": "0", "ok": true, "value": "0"},
+  {"raw": "шт", "ok": false},
+  {"raw": "   ", "ok": false},
+  {"raw": "", "ok": false}
+]

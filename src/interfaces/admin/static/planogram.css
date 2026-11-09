@@ -1,0 +1,574 @@
+.admin-planogram-section {
+  margin-top: 1.5rem;
+  --control-h: 1.7rem;
+  --radius: 0.4rem;
+  --planogram-gap: 0.35rem;
+  --planogram-pad: 0.45rem;
+  --chip-group-w: 4.6rem;
+}
+
+.admin-planogram-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-planogram-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-planogram-controls input[type="number"] {
+  width: 4rem;
+}
+
+.admin-planogram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--admin-muted, #666);
+}
+
+.chip-legend {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.chip-legend-line {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.chip-legend-stock {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.chip-legend-price {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fed7aa;
+}
+
+.admin-planogram-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--planogram-cols, 10), minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.planogram-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--planogram-gap);
+  padding: var(--planogram-pad);
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  background: #fff;
+  min-width: 0;
+  overflow: visible;
+}
+
+.planogram-name-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  height: calc(1.25em * 3 + 0.7rem);
+  padding: 0.35rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.planogram-product-name {
+  display: block;
+  width: 100%;
+  max-height: calc(1.25em * 3);
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  background: transparent;
+  font: inherit;
+  line-height: 1.25;
+  text-align: center;
+  word-break: break-word;
+}
+
+.planogram-name-suggestions {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: auto;
+  top: 100%;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+  min-width: 20rem;
+  width: max-content;
+  max-width: min(28rem, calc(100vw - 2rem));
+  max-height: 12rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 12%);
+}
+
+.planogram-name-suggestions li {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planogram-name-suggestions li:hover,
+.planogram-name-suggestions li[aria-selected="true"] {
+  background: #f3f4f6;
+}
+
+.planogram-cell-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--planogram-gap);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chip-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  height: var(--control-h);
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 0 0.4rem;
+  border-radius: var(--radius);
+  gap: 0;
+}
+
+.chip-group-stock {
+  width: var(--chip-group-w);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.chip-group-price {
+  width: var(--chip-group-w);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.chip-group--diff {
+  box-shadow: inset 0 0 0 1px #fb923c;
+}
+
+.chip-group .chip {
+  flex: 1 1 0;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chip-line {
+  height: var(--control-h);
+  width: 2.35rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius);
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 0;
+}
+
+.chip-line input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: inherit;
+  padding: 0;
+  text-align: center;
+}
+
+.chip-stock,
+.chip-capacity,
+.chip-calculated,
+.chip-current {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.chip-stock,
+.chip-capacity {
+  color: #1e40af;
+}
+
+.chip-calculated,
+.chip-current {
+  color: #9a3412;
+}
+
+.chip--overflow {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.planogram-span-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  background: #e5e7eb;
+  color: #4b5563;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.planogram-span-toggle:hover {
+  background: #d1d5db;
+}
+
+.planogram-span-toggle[data-span="2"] {
+  background: #9ca3af;
+  color: #fff;
+  border-color: #9ca3af;
+}
+
+.admin-planogram-duplicate {
+  outline: 2px solid #dc2626;
+  outline-offset: 1px;
+}
+
+.planogram-product-unlinked {
+  background: #fef3c7;
+}
+
+.planogram-pending-exit {
+  background: #e5e7eb;
+}
+
+.planogram-product-restore {
+  border: none;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 0.1rem 0.25rem;
+}
+
+.planogram-product-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 12rem;
+  min-height: var(--control-h, 1.7rem);
+}
+
+.planogram-product-search {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  padding: 0.15rem 0;
+}
+
+.planogram-product-search:focus {
+  outline: 1px solid var(--admin-accent, #0f766e);
+  background: #fff;
+}
+
+.planogram-product-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.planogram-product-selected[hidden],
+.planogram-product-search[hidden],
+.planogram-product-clear[hidden],
+.planogram-product-move[hidden],
+.border-product-picker[hidden],
+.planogram-product-picker[hidden] {
+  display: none !important;
+}
+
+.planogram-product-clear,
+.planogram-product-move,
+.planogram-price-reset {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h, 1.7rem);
+  height: var(--control-h, 1.7rem);
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius, 0.4rem);
+  background: #f3f4f6;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 0.85rem;
+}
+
+.planogram-product-clear:hover,
+.planogram-product-move:hover,
+.planogram-price-reset:hover {
+  background: #e5e7eb;
+}
+
+.planogram-price-reset:focus-visible {
+  outline: 2px solid var(--admin-accent, #0f766e);
+  outline-offset: 1px;
+}
+
+/* admin-roster td defaults to text-align: left — override numeric columns. */
+table.planogram-shelf-table.admin-roster td.planogram-stock-qty,
+table.planogram-shelf-table.admin-roster td.planogram-buy-price,
+table.planogram-shelf-table.admin-roster td:has(> .planogram-price-cell) {
+  text-align: center;
+}
+
+td.planogram-stock-qty,
+td.planogram-buy-price {
+  white-space: nowrap;
+}
+
+td.planogram-price-manual {
+  background: #fff4e5;
+}
+
+td.planogram-price-manual .planogram-price-input:not(.planogram-price-domain) {
+  font-weight: 600;
+}
+
+.planogram-price-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: auto;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.planogram-price-cell .planogram-price-input {
+  flex: 0 0 auto;
+  width: 3.25rem;
+  min-width: 0;
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.planogram-price-cell .planogram-price-input::-webkit-outer-spin-button,
+.planogram-price-cell .planogram-price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.planogram-price-cell .planogram-price-domain {
+  color: var(--admin-muted, #666);
+  font-weight: 400;
+  cursor: default;
+  pointer-events: none;
+}
+
+.planogram-price-cell .planogram-price-domain:focus {
+  outline: none;
+  background: transparent;
+}
+
+select.planogram-move-shelf-menu {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.planogram-product-options {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 0.15rem);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+  min-width: 16rem;
+  max-height: 12rem;
+  overflow: auto;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius, 0.4rem);
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+}
+
+.planogram-product-options[hidden] {
+  display: none !important;
+}
+
+.planogram-product-options button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.35rem 0.45rem;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.planogram-product-options button:hover,
+.planogram-product-options button[aria-selected="true"] {
+  background: #eef6f2;
+}
+
+.planogram-product-options-empty {
+  padding: 0.45rem;
+  color: var(--admin-muted, #6b7280);
+  font-size: 0.9rem;
+}
+
+.planogram-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h, 1.7rem);
+  height: var(--control-h, 1.7rem);
+  border: 0;
+  background: transparent;
+  color: var(--admin-muted, #6b7280);
+  cursor: grab;
+  user-select: none;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.planogram-drag-handle:active {
+  cursor: grabbing;
+}
+
+tr.planogram-dragging {
+  opacity: 0.55;
+  background: #eef6f2;
+}
+
+tr.planogram-drop-target td {
+  box-shadow: inset 0 2px 0 0 var(--admin-accent, #0f766e);
+}
+
+th.planogram-col-drag,
+td.planogram-col-drag {
+  width: 2.2rem;
+  text-align: center;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+}
+
+.planogram-shelf-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.planogram-shelf-header .planogram-shelf-label {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.planogram-shelf-collapse,
+.planogram-shelf-clear {
+  flex: 0 0 auto;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius, 0.4rem);
+  background: #f3f4f6;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+}
+
+.planogram-shelf-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.planogram-shelf.is-collapsed .planogram-shelf-body {
+  display: none;
+}
+
+.planogram-shelf.planogram-drop-target {
+  outline: 2px solid var(--admin-accent, #0f766e);
+  outline-offset: 2px;
+}
+
+.planogram-shelf.planogram-dragging {
+  opacity: 0.55;
+}
+
+/* Extra bottom space so the last planogram row can sit near the top of the viewport. */
+.planogram-scroll-spacer {
+  min-height: 100vh;
+  width: 100%;
+  pointer-events: none;
+}

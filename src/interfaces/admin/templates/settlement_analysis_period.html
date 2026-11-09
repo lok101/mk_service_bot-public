@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Период сверки{% endblock %}
+{% block page_title %}Период {{ view.period_id }}{% endblock %}
+{% block body %}
+  <p>
+    <a class="admin-btn admin-btn-secondary" href="/admin/settlement-analysis">← К анализу</a>
+  </p>
+  <p>
+    {{ view.location_name }} ·
+    {{ view.opened_at.strftime('%d.%m.%Y %H:%M') }} —
+    {{ view.closed_at.strftime('%d.%m.%Y %H:%M') }}
+  </p>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Товар</th>
+          <th>sales_total</th>
+          <th>delta</th>
+          <th>loads_total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in view.lines %}
+        <tr>
+          <td>{{ line.product_name }}</td>
+          <td>{{ line.sales_total }}</td>
+          <td>{{ line.delta }}</td>
+          <td>{{ line.loads_total }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="admin-muted">Нет строк</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

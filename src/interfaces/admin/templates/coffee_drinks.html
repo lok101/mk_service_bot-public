@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+{% if flash %}<p class="admin-flash admin-flash-error">{{ flash }}</p>{% endif %}
+<form method="post" action="/admin/coffee-drinks">
+  <label>Название <input name="name" required></label>
+  <label>Легаси-код МС <input name="legacy_ms_code"></label>
+  <button type="submit">Создать</button>
+</form>
+<div class="admin-table-wrap">
+  <table class="admin-roster">
+    <thead><tr><th>Номер</th><th>Имя</th><th>Легаси МС</th><th>Состав</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.number }}</td>
+        <td>{{ row.name }}</td>
+        <td>{{ row.legacy_ms_code }}</td>
+        <td>
+          <form method="post" action="/admin/coffee-drinks/recipe">
+            <input type="hidden" name="drink_product_id" value="{{ row.id }}">
+            {% for component in row.components %}
+              <div>
+                <select name="ingredient_product_id">
+                  {% for ingredient in ingredients %}
+                    <option value="{{ ingredient.id }}" {% if ingredient.id == component.ingredient_product_id %}selected{% endif %}>{{ ingredient.label }}</option>
+                  {% endfor %}
+                </select>
+                <input name="quantity_per_unit" value="{{ component.quantity_per_unit }}" required>
+                <button type="button" onclick="this.parentElement.remove()">Удалить</button>
+              </div>
+            {% endfor %}
+            <div>
+              <select name="ingredient_product_id">
+                <option value="">— ингредиент —</option>
+                {% for ingredient in ingredients %}
+                  <option value="{{ ingredient.id }}">{{ ingredient.label }}</option>
+                {% endfor %}
+              </select>
+              <input name="quantity_per_unit" placeholder="qty" value="">
+            </div>
+            <button type="submit">Сохранить состав</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Компании{% endblock %}
+{% block page_title %}Компании{% endblock %}
+{% block body %}
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p class="admin-hint">
+    Справочник юрлиц MK и привязок Kit. Пароли и accounts JSON здесь не правятся.
+  </p>
+
+  <p class="admin-filters" aria-label="Фильтр статуса">
+    <a class="admin-btn{% if status == 'active' %} admin-btn-current{% endif %}"
+       href="/admin/companies?status=active">Активные</a>
+    <a class="admin-btn{% if status == 'inactive' %} admin-btn-current{% endif %}"
+       href="/admin/companies?status=inactive">Неактивные</a>
+    <a class="admin-btn{% if status == 'all' %} admin-btn-current{% endif %}"
+       href="/admin/companies?status=all">Все</a>
+  </p>
+
+  <p>
+    <a class="admin-btn" href="/admin/companies/new">Добавить</a>
+  </p>
+
+  <div class="admin-table-wrap">
+    <table class="admin-roster" id="companies-table">
+      <thead>
+        <tr>
+          <th scope="col">Название</th>
+          <th scope="col">Bindings</th>
+          <th scope="col">Активна</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.bindings_summary }}</td>
+          <td>{{ row.status_label }}</td>
+          <td>
+            <a class="admin-btn" href="/admin/companies/{{ row.company_id }}">Изменить</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4">Нет компаний для выбранного фильтра</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

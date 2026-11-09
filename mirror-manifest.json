@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-11-09T11:54:14.896900+00:00",
+  "copied": 2580,
+  "overlays": [
+    "README.md",
+    ".env.example",
+    "kit_platform_accounts.example.json",
+    "kitvending_accounts.example.json"
+  ],
+  "skipped_tracked": 5396,
+  "allow_count": 33,
+  "deny_count": 31
+}

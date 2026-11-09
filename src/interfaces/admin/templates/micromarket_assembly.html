@@ -1,0 +1,86 @@
+{% from "_admin_save_bar.html" import admin_save_bar %}
+  <p class="admin-muted">{{ display_name }}</p>
+
+  {% if admin_error %}
+  <div class="admin-hint admin-user-error" role="alert">
+    <p class="admin-error-cause">{{ admin_error.cause }}</p>
+    <p class="admin-error-action">{{ admin_error.action }}</p>
+    <p class="admin-error-code">{{ admin_error.code }}</p>
+  </div>
+  {% elif message %}
+  <p class="admin-hint">{{ message }}</p>
+  {% endif %}
+
+  <form id="micromarket-assembly-form" method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-assembly-orders">
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="micromarket-assembly-table">
+        <thead>
+          <tr>
+            <th scope="col">Код</th>
+            <th scope="col">Имя</th>
+            <th scope="col">На полке</th>
+            <th scope="col">Цель</th>
+            <th scope="col">Нужно</th>
+            <th scope="col">На складе</th>
+            <th scope="col">В сборку</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if loading_sections %}
+          {% for section in loading_sections %}
+          <tr class="admin-section-row">
+            <th scope="rowgroup" colspan="7">{{ section.title }}</th>
+          </tr>
+          {% for row in section.rows %}
+          <tr>
+            <td>
+              {{ row.product_code }}
+              <input type="hidden" name="product_code" value="{{ row.product_code }}">
+              <input type="hidden" name="stock_qty" value="{{ row.stock_qty }}">
+              <input type="hidden" name="target_qty" value="{{ row.target_qty }}">
+              <input type="hidden" name="launch_qty" value="{{ row.launch_qty }}">
+            </td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.stock_qty }}</td>
+            <td>{{ row.target_qty }}</td>
+            <td class="admin-qty-cell{% if row.need_from_live %} admin-need-from-live{% endif %}">
+              <span class="admin-need-readonly">{{ row.need_qty }}</span>
+              <input type="hidden" name="need_qty" value="{{ row.need_qty }}">
+            </td>
+            <td>{{ row.warehouse_qty_display }}</td>
+            <td class="admin-qty-cell">
+              {% set _invalid = error_target_codes and (
+                   row.product_code in error_target_codes
+                   or (row.catalog_code is defined and row.catalog_code in error_target_codes)
+                 ) %}
+              {% with name="assembly_qty",
+                      value=row.assembly_qty|int,
+                      min=0,
+                      max=row.launch_stepper_max,
+                      aria_label="assembly_qty",
+                      input_class=("admin-field-invalid" if _invalid else ""),
+                      integer=true,
+                      locked=row.assembly_qty_locked %}
+                {% include "_admin_quantity_stepper.html" %}
+              {% endwith %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" class="admin-muted">Планограмма пуста — строк для сборки нет.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  {% call admin_save_bar() %}
+      <button type="submit" form="micromarket-assembly-form" class="admin-btn">
+        Создать ордер сборки
+      </button>
+  {% endcall %}
+  <script src="{{ static_href('admin_quantity_stepper.js') }}" defer></script>

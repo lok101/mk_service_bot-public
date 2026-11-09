@@ -1,0 +1,7 @@
+[
+  {
+    "name": "DEPRECATED — use kit_platform_accounts.example.json",
+    "comment": "Legacy kitvending_accounts.json is replaced by kit_platform_accounts.json + Mongo master_companies.",
+    "see": "kit_platform_accounts.example.json"
+  }
+]

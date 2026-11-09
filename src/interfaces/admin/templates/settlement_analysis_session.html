@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Сессия сверки{% endblock %}
+{% block page_title %}Итог сессии {{ view.session_id }}{% endblock %}
+{% block body %}
+  <p>
+    <a class="admin-btn admin-btn-secondary" href="/admin/settlement-analysis?technician_id={{ technician_id }}">
+      ← К анализу
+    </a>
+  </p>
+  <p>
+    Техник: {{ view.technician_id }} · режим: <span class="settlement-mode-badge">{{ view.mode }}</span>
+    {% if view.warehouse_inventory_moment %}
+    · момент: {{ view.warehouse_inventory_moment.strftime('%d.%m.%Y %H:%M') }}
+    {% endif %}
+  </p>
+
+  <section aria-label="warehouse_delta">
+    <h2>warehouse_delta</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Товар</th><th>Qty</th></tr></thead>
+        <tbody>
+          {% for row in view.warehouse_delta_rows %}
+          <tr><td>{{ row.product_name }}</td><td>{{ row.qty }}</td></tr>
+          {% else %}
+          <tr><td colspan="2" class="admin-muted">Пусто</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-label="residual">
+    <h2>residual</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Товар</th><th>Qty</th></tr></thead>
+        <tbody>
+          {% for row in view.residual_rows %}
+          <tr><td>{{ row.product_name }}</td><td>{{ row.qty }}</td></tr>
+          {% else %}
+          <tr><td colspan="2" class="admin-muted">Пусто</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

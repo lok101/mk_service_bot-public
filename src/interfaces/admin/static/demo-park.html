@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo: Парк</title>
+  <link rel="stylesheet" href="/admin/static/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="admin-layout">
+      <aside class="admin-app-sidebar" id="admin-app-sidebar" data-collapsed="false">
+        <button type="button" class="admin-sidebar-toggle" aria-label="Меню">
+          <span class="admin-sidebar-icon admin-icon-menu" aria-hidden="true"></span>
+        </button>
+        <nav class="admin-sidebar-nav" aria-label="Admin">
+          <a class="admin-sidebar-link" href="#">
+            <span class="admin-sidebar-icon admin-icon-roster" aria-hidden="true"></span>
+            <span class="admin-sidebar-label">Roster</span>
+          </a>
+          <a class="admin-sidebar-link is-active" href="#">
+            <span class="admin-sidebar-icon admin-icon-master-data" aria-hidden="true"></span>
+            <span class="admin-sidebar-label">Парк</span>
+          </a>
+        </nav>
+        <form method="post" action="#" class="admin-sidebar-logout">
+          <button type="submit" class="admin-btn admin-btn-secondary">Выйти</button>
+        </form>
+      </aside>
+      <div class="admin-main">
+        <header class="admin-app-header">
+          <h1>Парк аппаратов</h1>
+        </header>
+
+        <p class="admin-hint"><a class="admin-btn" href="#">Установка</a></p>
+
+        <div class="admin-roster-chrome">
+          <div class="admin-roster-chrome-pin">
+            <div class="admin-filters" id="park-filters">
+              <label>Поиск (код / точка)
+                <input type="search" id="park-search" placeholder="код или имя" autocomplete="off">
+              </label>
+              <label>Тип
+                <select id="park-kind-filter">
+                  <option value="all">Все</option>
+                  <option value="coffee">coffee</option>
+                  <option value="snack">snack</option>
+                  <option value="micro_market">micro_market</option>
+                </select>
+              </label>
+              <p class="admin-muted">Показано <span id="park-visible-count">3</span> из
+                <span id="park-total-count">3</span></p>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-roster" id="park-machines-table">
+              <thead>
+                <tr>
+                  <th scope="col">Код</th>
+                  <th scope="col">Тип</th>
+                  <th scope="col">Точка</th>
+                  <th scope="col">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  data-machine-id="C-101"
+                  data-location-name="Кафе Центральное"
+                  data-kind="coffee"
+                >
+                  <td>C-101</td>
+                  <td>coffee</td>
+                  <td>
+                    <a class="admin-entity-link" href="#">Кафе Центральное</a>
+                  </td>
+                  <td>
+                    <a class="admin-btn" href="#">Релокация</a>
+                  </td>
+                </tr>
+                <tr
+                  data-machine-id="S-202"
+                  data-location-name="Школа №5"
+                  data-kind="snack"
+                >
+                  <td>S-202</td>
+                  <td>snack</td>
+                  <td>
+                    <a class="admin-entity-link" href="#">Школа №5</a>
+                  </td>
+                  <td>
+                    <a class="admin-btn" href="#">Релокация</a>
+                  </td>
+                </tr>
+                <tr
+                  data-machine-id="C-303"
+                  data-location-name=""
+                  data-kind="coffee"
+                >
+                  <td>C-303</td>
+                  <td>coffee</td>
+                  <td>—</td>
+                  <td>
+                    <a class="admin-btn" href="#">Со склада</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/admin/static/admin_sidebar.js" defer></script>
+  </div>
+  <script src="/admin/static/park.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ group_title }} — разбор{% endblock %}
+{% block page_title %}{{ group_title }}{% endblock %}
+{% block body %}
+  <p>
+    <a href="{{ list_href }}">К списку</a>
+    {% if adjacent.prev_batch_id and adjacent.prev_group_id %}
+    · <a href="/admin/visit-photo-review/blocks/{{ adjacent.prev_batch_id }}/{{ adjacent.prev_group_id }}?{{ query_string }}">← Предыдущий</a>
+    {% endif %}
+    {% if adjacent.next_batch_id and adjacent.next_group_id %}
+    · <a href="/admin/visit-photo-review/blocks/{{ adjacent.next_batch_id }}/{{ adjacent.next_group_id }}?{{ query_string }}">Следующий →</a>
+    {% endif %}
+  </p>
+  <p>{{ machine_name }} · {{ technician_name }}{% if location_name %} · {{ location_name }}{% endif %}</p>
+
+  <div class="visit-photo-review-frames">
+    {% for index in indexes %}
+    <figure>
+      <img src="/admin/visit-photo-review/photos/{{ batch_id }}/{{ index }}" alt="Кадр {{ index }}">
+    </figure>
+    {% else %}
+    <p class="admin-muted">Нет кадров в блоке.</p>
+    {% endfor %}
+  </div>
+
+  {% if is_unrecognized %}
+  <div class="visit-photo-review-dispose">
+    {% for index in indexes %}
+    <div class="visit-photo-dispose-block">
+      <p>Кадр {{ index }}</p>
+      <h3 class="visit-photo-dispose-heading">Содержательная группа</h3>
+      <div class="visit-photo-dispose-groups">
+        {% for group in content_groups %}
+        <form method="post" action="/admin/visit-photo-review/blocks/{{ batch_id }}/unrecognized/dispose?{{ query_string }}" class="visit-photo-dispose-group-form">
+          <input type="hidden" name="index" value="{{ index }}">
+          <input type="hidden" name="target_group_id" value="{{ group.group_id }}">
+          <button type="submit" name="action" value="content" class="admin-btn visit-photo-dispose-group">{{ group.title }}</button>
+        </form>
+        {% endfor %}
+      </div>
+      <hr class="visit-photo-dispose-separator">
+      <form method="post" action="/admin/visit-photo-review/blocks/{{ batch_id }}/unrecognized/dispose?{{ query_string }}" class="visit-photo-dispose-terminal">
+        <input type="hidden" name="index" value="{{ index }}">
+        <button type="submit" name="action" value="poor_quality" class="admin-btn visit-photo-dispose-poor">Некачественное фото</button>
+        <button type="submit" name="action" value="trash" class="admin-btn visit-photo-dispose-trash">Мусор</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif can_save %}
+  <form method="post" action="/admin/visit-photo-review/blocks/{{ batch_id }}/{{ group_id }}?{{ query_string }}">
+    <input type="hidden" name="index" value="{{ indexes[0] }}">
+    {% for defect in defects %}
+    <label>
+      <input type="checkbox" name="defect-{{ defect.code }}"{% if defect.code in selected_codes %} checked{% endif %}>
+      {{ defect.label }}
+    </label>
+    {% endfor %}
+    <label>
+      <input type="checkbox" name="system_error"{% if system_error %} checked{% endif %}>
+      Кадр не в этой группе
+    </label>
+    <label>Комментарий
+      <textarea name="comment" rows="3">{{ comment }}</textarea>
+    </label>
+    <button type="submit">Закрыть</button>
+  </form>
+  {% elif has_record %}
+  <form method="post" action="/admin/visit-photo-review/blocks/{{ batch_id }}/{{ group_id }}/clear?{{ query_string }}">
+    <p class="admin-muted">Живого назначения нет — можно только снять запись.</p>
+    <button type="submit">Снять запись</button>
+  </form>
+  {% else %}
+  <p class="admin-muted">Нет живого назначения и нет записи.</p>
+  {% endif %}
+{% endblock %}

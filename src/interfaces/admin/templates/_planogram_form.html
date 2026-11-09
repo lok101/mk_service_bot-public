@@ -1,0 +1,126 @@
+<section class="admin-layout-section">
+  <input type="hidden" name="layout_section" value="1">
+  <div class="admin-planogram-controls">
+    <label>
+      Множитель матрицы
+      <input type="text"
+             name="matrix_multiplier"
+             value="{{ layout_section.matrix_multiplier }}">
+    </label>
+    <label>
+      <input type="checkbox"
+             name="auto_sync_enabled"
+             {% if layout_section.auto_sync_enabled %}checked{% endif %}
+             {% if not layout_section.auto_sync_allowed %}disabled{% endif %}>
+      Автосинхронизация
+    </label>
+    <label>Полок
+      <input type="number" name="planogram_shelf_count" min="1" max="20"
+             value="{{ layout_section.shelf_count }}" id="planogram-shelf-count">
+    </label>
+    <label>Ячеек на полку
+      <input type="number" name="planogram_slots_per_shelf" min="1" max="20"
+             value="{{ layout_section.slots_per_shelf }}" id="planogram-slots-per-shelf">
+    </label>
+  </div>
+  {% if not layout_section.auto_sync_allowed %}
+  <p class="admin-hint">Сначала выполните «Применить», чтобы включить автосинхронизацию.</p>
+  {% endif %}
+  <p class="admin-error" id="layout-client-error" hidden></p>
+  <section class="admin-planogram-section">
+    <p class="admin-planogram-legend" aria-label="Легенда чипов">
+      <span class="chip-legend chip-legend-line">№</span>
+      <span class="chip-legend chip-legend-stock"
+            title="загрузка = max(0, ёмк − ост)"
+            aria-description="загрузка = max(0, ёмк − ост)">ост · ёмк</span>
+      <span class="chip-legend chip-legend-price">расч · тек</span>
+    </p>
+    <div class="admin-planogram-grid" id="planogram-grid"
+         style="--planogram-cols: {{ layout_section.slots_per_shelf }}"
+         data-shelf-count="{{ layout_section.shelf_count }}"
+         data-slots-per-shelf="{{ layout_section.slots_per_shelf }}">
+      {% for slot in layout_section.slots %}
+      {% if slot.is_anchor %}
+      <article class="planogram-cell{% if slot.grid_column_span == 2 %} planogram-cell--double{% endif %}{% if slot.unlinked %} planogram-product-unlinked{% endif %}"
+               style="grid-column: span {{ slot.grid_column_span }};"
+               data-shelf="{{ slot.shelf_index }}" data-slot="{{ slot.slot_index }}">
+        <input type="hidden" name="planogram_shelf_index" value="{{ slot.shelf_index }}">
+        <input type="hidden" name="planogram_slot_index" value="{{ slot.slot_index }}">
+        {% if slot.missing_product %}
+        <div class="planogram-product-picker" data-unlinked="true">
+          <input type="search"
+                 class="planogram-product-search admin-cell-input"
+                 placeholder="Название товара…"
+                 autocomplete="off"
+                 aria-label="Поиск товара"
+                 aria-autocomplete="list"
+                 hidden>
+          <span class="planogram-product-selected">
+            <span class="planogram-product-legacy">Товар не найден</span>
+          </span>
+          <button type="button"
+                  class="planogram-product-clear"
+                  aria-label="Убрать товар">✕</button>
+          <input type="hidden"
+                 class="planogram-domain-product-id"
+                 name="planogram_domain_product_id"
+                 value="{{ slot.domain_product_id }}">
+          <input type="hidden"
+                 class="planogram-legacy-product-code"
+                 name="planogram_product_code"
+                 value="">
+          <ul class="planogram-product-options" hidden role="listbox"></ul>
+        </div>
+        {% else %}
+        {% with
+            domain_product_id=slot.domain_product_id,
+            product_name=slot.product_name,
+            linked=not slot.unlinked,
+            id_input_name="planogram_domain_product_id",
+            code_input_name="planogram_product_code",
+            product_number="",
+            legacy_code=(slot.product_code if not slot.domain_product_id else ""),
+            legacy_label=(slot.product_name if slot.product_code and not slot.domain_product_id else "")
+        %}
+          {% include "_planogram_product_picker.html" %}
+        {% endwith %}
+        {% endif %}
+        <div class="planogram-cell-row planogram-cell-row-metrics">
+          <span class="chip chip-line">
+            <input name="planogram_line_number" value="{{ slot.line_number }}" aria-label="№ линии">
+          </span>
+          <span class="chip-group chip-group-stock" title="ост · ёмк">
+            <span class="chip chip-stock{% if slot.stock_overflow %} chip--overflow{% endif %}"
+                  title="загрузка = max(0, ёмк − ост)"
+                  aria-label="ост">{{ slot.stock_display }}</span>
+            <span class="chip chip-capacity"
+                  title="загрузка = max(0, ёмк − ост)"
+                  aria-label="ёмк">{{ slot.capacity_display }}</span>
+          </span>
+        </div>
+        <div class="planogram-cell-row planogram-cell-row-price">
+          <button type="button"
+                  class="planogram-span-toggle"
+                  data-span="{% if slot.merge_checked %}2{% else %}1{% endif %}"
+                  data-merge="{{ slot.shelf_index }}:{{ slot.span_merge_anchor_slot }}"
+                  data-merge-direction="{{ slot.span_toggle_direction }}"
+                  title="Ширина: 1 = одинарная, 2 = двойная"
+                  aria-label="Ширина ячейки">{% if slot.merge_checked %}2{% else %}1{% endif %}</button>
+          <span class="chip-group chip-group-price{% if slot.price_diff %} chip-group--diff{% endif %}"
+                title="расч · тек">
+            <span class="chip chip-calculated" aria-label="расч">{{ slot.calculated_display }}</span>
+            <span class="chip chip-current" aria-label="тек">{{ slot.current_display }}</span>
+          </span>
+        </div>
+      </article>
+      {% endif %}
+      {% endfor %}
+    </div>
+    <script type="application/json" id="planogram-domain-product-options">{{ planogram_product_options_json | safe }}</script>
+    <script type="application/json" id="layout-product-options-json">
+      {{ layout_autocomplete_options_json | safe }}
+    </script>
+  </section>
+  <link rel="stylesheet" href="{{ static_href('planogram.css') }}">
+  <script src="{{ static_href('planogram_product_picker.js') }}" defer></script>
+</section>

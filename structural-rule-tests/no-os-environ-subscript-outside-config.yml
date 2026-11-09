@@ -1,0 +1,7 @@
+id: no-os-environ-subscript-outside-config
+valid:
+  - "import os"
+  - "os.environ['X'] = '1'"
+invalid:
+  - "x = os.environ['BOT_TOKEN']"
+  - "foo(os.environ['X'])"

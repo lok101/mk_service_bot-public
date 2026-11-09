@@ -1,0 +1,13 @@
+{
+  "ResultCode": 0,
+  "Sales": [
+    {
+      "SaleId": 100,
+      "CompanyId": 1,
+      "ShopId": 10,
+      "DeviceId": 99,
+      "SaleDateTime": "04.09.2026 12:00:00",
+      "Positions": []
+    }
+  ]
+}

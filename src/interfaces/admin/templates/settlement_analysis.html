@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Сверка{% endblock %}
+{% block page_title %}Анализ сверки{% endblock %}
+{% block body %}
+  <form method="get" action="/admin/settlement-analysis" id="settlement-analysis-tech-form" class="settlement-analysis-tech">
+    <label>Техник
+      <select name="technician_id" id="settlement-technician">
+        <option value="">— выберите —</option>
+        {% for tech_id, tech_name in technician_options %}
+        <option value="{{ tech_id }}" {% if tech_id == selected_technician_id %}selected{% endif %}>
+          {{ tech_id }} — {{ tech_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <input type="hidden" name="sessions" id="settlement-sessions-hidden" value="{{ sessions_csv }}">
+    <button type="submit">Показать</button>
+  </form>
+
+  {% if empty_message %}
+  <p class="admin-muted">{{ empty_message }}</p>
+  {% endif %}
+
+  {% if tree and tree.clusters %}
+  <section class="settlement-analysis-tree" aria-label="Кластеры сверки">
+    <form method="get" action="/admin/settlement-analysis" id="settlement-analysis-cluster-form">
+      <input type="hidden" name="technician_id" value="{{ selected_technician_id }}">
+      <input type="hidden" name="sessions" id="settlement-sessions-query" value="{{ sessions_csv }}">
+      {% for cluster in tree.clusters %}
+      <details class="settlement-cluster">
+        <summary class="settlement-cluster-summary">
+          <label class="settlement-cluster-check" data-cluster-check-label="1">
+            <input
+              type="checkbox"
+              name="session_check"
+              value="{{ cluster.session_id }}"
+              data-cluster-checkbox="1"
+              {% if cluster.session_id in selected_sessions %}checked{% endif %}
+            >
+          </label>
+          <a
+            class="admin-entity-link"
+            href="/admin/settlement-analysis/sessions/{{ cluster.session_id }}?technician_id={{ selected_technician_id }}"
+          >
+            {% if cluster.warehouse_inventory_moment %}
+              {{ cluster.warehouse_inventory_moment.strftime('%d.%m.%Y %H:%M') }}
+            {% else %}
+              {{ cluster.finalized_at.strftime('%d.%m.%Y %H:%M') }}
+            {% endif %}
+            · {{ mode_labels.get(cluster.mode, cluster.mode) }}
+          </a>
+          <span class="settlement-mode-badge">{{ cluster.mode }}</span>
+        </summary>
+        <div class="admin-table-wrap settlement-period-wrap">
+          <table class="settlement-period-table">
+            <thead>
+              <tr>
+                <th scope="col">Локация</th>
+                <th scope="col">Начало</th>
+                <th scope="col">Окончание</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for period in cluster.periods %}
+              <tr data-period-row="1">
+                {% if period.missing_snapshot %}
+                <td colspan="3" class="admin-muted">{{ period.period_id }} — нет snapshot</td>
+                {% else %}
+                <td>
+                  <a
+                    class="admin-entity-link"
+                    href="/admin/settlement-analysis/periods/{{ period.period_id }}"
+                  >
+                    {{ period.location_name or period.period_id }}
+                  </a>
+                </td>
+                <td>{% if period.opened_at %}{{ period.opened_at.strftime('%d.%m.%Y') }}{% endif %}</td>
+                <td>{% if period.closed_at %}{{ period.closed_at.strftime('%d.%m.%Y') }}{% endif %}</td>
+                {% endif %}
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="3" class="admin-muted">Нет периодов</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endfor %}
+    </form>
+  </section>
+  {% endif %}
+
+  {% if aggregate %}
+  <section class="settlement-analysis-aggregate" data-aggregate-block="1" aria-label="Агрегация">
+    {% macro sku_table(rows, shortage_total, excess_total, group) %}
+    <div class="settlement-sku-group" data-sku-group="{{ group }}">
+      <div class="admin-table-wrap settlement-sku-wrap">
+        <table class="settlement-sku-table">
+          <colgroup>
+            <col class="settlement-sku-col-name">
+            <col class="settlement-sku-col-num">
+            <col class="settlement-sku-col-num">
+            <col class="settlement-sku-col-pct">
+            <col class="settlement-sku-col-money">
+            <col class="settlement-sku-col-money">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="settlement-sku-name">Товар</th>
+              <th scope="col">Расход</th>
+              <th scope="col">Итог</th>
+              <th scope="col">%</th>
+              <th scope="col">Недостача</th>
+              <th scope="col">Сверх нормы</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr {% if row.price_missing and row.residual < 0 %}class="settlement-row-no-price"{% endif %}>
+              <td class="settlement-sku-name">{{ row.product_name }}</td>
+              <td>{{ row.consumption }}</td>
+              <td>{{ row.residual }}</td>
+              <td>{% if row.loss_pct_points is none %}н/д{% else %}{{ row.loss_pct_points }}{% endif %}</td>
+              <td>{{ row.shortage_money | analysis_rubles }}</td>
+              <td>{{ row.excess_money | analysis_rubles }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="settlement-sku-totals">
+              <td colspan="4"></td>
+              <td data-sku-shortage="{{ group }}">{{ shortage_total | analysis_rubles }}</td>
+              <td data-sku-excess="{{ group }}">{{ excess_total | analysis_rubles }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {% endmacro %}
+    {{ sku_table(
+         aggregate.loss_rows,
+         aggregate.loss_shortage_money,
+         aggregate.loss_excess_money,
+         "loss",
+    ) }}
+    {{ sku_table(
+         aggregate.recoverable_rows,
+         aggregate.recoverable_shortage_money,
+         aggregate.recoverable_excess_money,
+         "recoverable",
+    ) }}
+  </section>
+  {% endif %}
+
+  <form method="post" action="/admin/settlement-analysis/prefs" id="settlement-analysis-prefs-form">
+    <input type="hidden" name="technician_id" value="{{ selected_technician_id }}">
+    <input type="hidden" name="sessions" value="{{ sessions_csv }}">
+    <section class="settlement-analysis-prefs" aria-label="Prefs">
+      <h2>Prefs (цены / группы / N%)</h2>
+      <label>Допустимые потери N%
+        <input type="text" name="allowed_loss_pct" value="{{ prefs.allowed_loss_pct }}">
+      </label>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Товар</th>
+              <th>Цена</th>
+              <th>Взыскание</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for code, name in prefs_sku_rows %}
+            <tr>
+              <td>{{ name }}</td>
+              <td>
+                <input
+                  type="text"
+                  name="prices[{{ code }}]"
+                  value="{{ prefs.unit_prices.get(code, '') }}"
+                >
+              </td>
+              <td>
+                <input
+                  type="checkbox"
+                  name="recoverable[{{ code }}]"
+                  {% if code in prefs.recoverable_product_codes %}checked{% endif %}
+                >
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="3" class="admin-muted">
+                Выберите кластеры или задайте цены вручную после агрегации.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить prefs</button>
+    {% endcall %}
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('settlement_analysis.js') }}" defer></script>
+{% endblock %}

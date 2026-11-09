@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Техники{% endblock %}
+{% block page_title %}Техники{% endblock %}
+{% block body %}
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p class="admin-hint">
+    Сохраняется вся таблица. Полевой учёт и доступ в Telegram-бот; права на панели сайта —
+    на экране «Доступ». Удаления нет.
+  </p>
+
+  <p class="admin-filters" aria-label="Фильтр статуса">
+    <a class="admin-btn{% if status == 'active' %} admin-btn-current{% endif %}"
+       href="/admin/technicians?status=active">Активные</a>
+    <a class="admin-btn{% if status == 'inactive' %} admin-btn-current{% endif %}"
+       href="/admin/technicians?status=inactive">Неактивные</a>
+    <a class="admin-btn{% if status == 'all' %} admin-btn-current{% endif %}"
+       href="/admin/technicians?status=all">Все</a>
+  </p>
+
+  <form method="post" action="/admin/technicians" id="technicians-form">
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="technicians-table">
+        <thead>
+          <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Telegram id</th>
+            <th scope="col">Роль в боте</th>
+            <th scope="col">В учёте</th>
+            <th scope="col">Бот активен</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          {% set row_index = loop.index0 %}
+          <tr data-technician-id="{{ row.technician_id }}">
+            <td>
+              <input type="hidden" name="technician_id-{{ row_index }}" value="{{ row.technician_id }}">
+              {{ row.technician_id }}
+            </td>
+            <td>
+              <input name="name-{{ row_index }}" type="text" value="{{ row.name }}" required>
+            </td>
+            <td>
+              <input
+                name="telegram_user_id-{{ row_index }}"
+                type="text"
+                value="{% if row.telegram_user_id %}{{ row.telegram_user_id }}{% endif %}"
+                {% if row.user_id %}required{% endif %}
+                placeholder="Telegram id"
+              >
+            </td>
+            <td>
+              <select name="bot_role-{{ row_index }}">
+                {% for value, label in bot_roles %}
+                <option value="{{ value }}" {% if value == row.bot_role %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                name="technician_is_active-{{ row_index }}"
+                {% if row.technician_is_active %}checked{% endif %}
+              >
+            </td>
+            <td>
+              <input type="hidden" name="user_id-{{ row_index }}" value="{{ row.user_id or '' }}">
+              <input
+                type="checkbox"
+                name="is_active-{{ row_index }}"
+                {% if row.user_is_active %}checked{% endif %}
+              >
+            </td>
+            <td>
+              <a class="admin-btn" href="/admin/technicians/{{ row.technician_id }}">Карточка</a>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr data-create="1">
+            <td>
+              <input type="hidden" name="technician_id-{{ rows|length }}" value="">
+            </td>
+            <td>
+              <input name="name-{{ rows|length }}" type="text" value="" placeholder="Новый">
+            </td>
+            <td>
+              <input
+                name="telegram_user_id-{{ rows|length }}"
+                type="text"
+                value=""
+                placeholder="Telegram id"
+              >
+            </td>
+            <td>
+              <select name="bot_role-{{ rows|length }}">
+                {% for value, label in bot_roles %}
+                <option value="{{ value }}" {% if value == 'technician' %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <input type="checkbox" name="technician_is_active-{{ rows|length }}" checked>
+            </td>
+            <td>
+              <input type="hidden" name="user_id-{{ rows|length }}" value="">
+              <input type="checkbox" name="is_active-{{ rows|length }}" checked>
+            </td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin{% endblock %}</title>
+  <link rel="icon" href="{{ static_href('favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ static_href('admin.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="admin-shell">
+    {% block chrome %}
+    <div class="admin-layout">
+      <aside class="admin-app-sidebar" id="admin-app-sidebar" data-collapsed="false">
+        <button type="button" class="admin-sidebar-toggle" aria-label="Меню" aria-controls="admin-app-sidebar">
+          <span class="admin-sidebar-icon admin-icon-menu" aria-hidden="true"></span>
+        </button>
+        <nav class="admin-sidebar-nav" aria-label="Admin">
+          {% for node in nav_tree %}
+            {% if node.kind == "folder" %}
+            <details class="admin-sidebar-folder" data-folder-id="{{ node.folder_id }}"{% if node.active %} open{% endif %}>
+              <summary class="admin-sidebar-folder-summary{% if node.active %} is-active{% endif %}">
+                <span class="admin-sidebar-icon admin-icon-folder" aria-hidden="true"></span>
+                <span class="admin-sidebar-label">{{ node.title }}</span>
+              </summary>
+              <div class="admin-sidebar-folder-children">
+                {% for child in node.children %}
+                <a class="admin-sidebar-link{% if child.active %} is-active{% endif %}" href="{{ child.href }}">
+                  <span class="admin-sidebar-icon {{ child.icon_class }}" aria-hidden="true"></span>
+                  <span class="admin-sidebar-label">{{ child.label }}</span>
+                </a>
+                {% endfor %}
+              </div>
+            </details>
+            {% else %}
+            <a class="admin-sidebar-link{% if node.active %} is-active{% endif %}" href="{{ node.href }}">
+              <span class="admin-sidebar-icon {{ node.icon_class }}" aria-hidden="true"></span>
+              <span class="admin-sidebar-label">{{ node.label }}</span>
+            </a>
+            {% endif %}
+          {% endfor %}
+        </nav>
+        <form method="post" action="/admin/logout" class="admin-sidebar-logout">
+          <button type="submit" class="admin-btn admin-btn-secondary">Выйти</button>
+        </form>
+      </aside>
+      <div class="admin-main{% if main_class %} {{ main_class }}{% endif %}">
+        <header class="admin-app-header">
+          <h1>{% block page_title %}Admin{% endblock %}</h1>
+        </header>
+        {% block body %}{% endblock %}
+      </div>
+    </div>
+    <script src="{{ static_href('admin_sidebar.js') }}" defer></script>
+    {% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

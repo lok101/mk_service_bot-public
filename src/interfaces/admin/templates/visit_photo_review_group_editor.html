@@ -1,0 +1,62 @@
+{% from "_admin_save_bar.html" import admin_save_bar %}
+﻿{% extends "base.html" %}
+{% block title %}{{ group_title }}{% endblock %}
+{% block page_title %}{{ group_title }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a class="admin-entity-link" href="{{ groups_list_href }}">← Группы</a></p>
+
+  {% if error_message %}
+  <p class="admin-hint" role="alert">{{ error_message }}</p>
+  {% endif %}
+
+  <form method="post"
+        action="/admin/visit-photo-review/groups/{{ group_id }}"
+        enctype="multipart/form-data"
+        id="group-catalog-editor-form">
+    <section aria-label="Фото группы">
+      <div class="demo-photo-block">
+        {% if has_avatar %}
+        <img class="demo-group-thumb demo-group-thumb--lg"
+             src="/admin/visit-photo-review/avatars/{{ group_id }}"
+             alt="Фото группы">
+        {% else %}
+        <span class="demo-group-thumb demo-group-thumb--lg demo-group-thumb--empty demo-group-row-photo--default"
+              aria-label="Нет фото"></span>
+        {% endif %}
+        <label>Загрузить
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+        </label>
+      </div>
+    </section>
+
+    {% if not photo_only %}
+    <section aria-labelledby="defects-heading" id="defects-section">
+      <h2 id="defects-heading">Проблемы фото</h2>
+      <div class="demo-defect-rows" id="defect-rows">
+        {% if defects %}
+        {% for defect in defects %}
+        <div class="demo-defect-row">
+          <input type="hidden" name="defect_code_{{ loop.index0 }}" value="{{ defect.code }}">
+          <label>Подпись
+            <input type="text" name="defect_label_{{ loop.index0 }}" value="{{ defect.label }}" autocomplete="off">
+          </label>
+          <button type="button" class="admin-btn" data-remove-defect>Удалить</button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="admin-muted">Проблем пока нет — на разборе блок «Ошибки техника» будет пустым.</p>
+        {% endif %}
+      </div>
+      <button type="button" class="admin-btn" id="add-defect">Добавить проблему</button>
+    </section>
+    {% endif %}
+
+    {% call admin_save_bar() %}
+        <button type="submit" class="admin-btn">Сохранить</button>
+    {% endcall %}
+  </form>
+
+  {% if not photo_only %}
+  <script src="{{ static_href('visit_photo_review_groups.js') }}" defer></script>
+  {% endif %}
+{% endblock %}

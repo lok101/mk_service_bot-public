@@ -1,0 +1,51 @@
+# Overlay for Docker black-box e2e. Do not use for prod.
+# Example:
+#   docker compose -p mk_e2e --env-file .env.e2e \
+#     -f docker-compose.yml -f docker-compose.e2e.yml up -d --build app mongo redis
+
+name: mk-service-bot-e2e
+
+services:
+  app:
+    env_file: !override
+      - .env.e2e
+    ports: !override
+      - "18000:8000"
+    environment:
+      ENVIRONMENT: dev
+      ENV_FILE: .env.e2e
+
+  effects-worker:
+    profiles: ["e2e-effects-worker-disabled"]
+
+  matrix-worker:
+    profiles: ["e2e-matrix-worker-disabled"]
+
+  sales-monitoring-worker:
+    profiles: ["e2e-sales-monitoring-worker-disabled"]
+
+  daily-sales-demand-worker:
+    profiles: ["e2e-daily-sales-demand-worker-disabled"]
+
+  machine-pnl-month-worker:
+    profiles: ["e2e-machine-pnl-month-worker-disabled"]
+
+  service-visits-worker:
+    profiles: ["e2e-service-visits-worker-disabled"]
+
+  event-reminders-worker:
+    profiles: ["e2e-event-reminders-worker-disabled"]
+
+  mongo:
+    ports:
+      - "27019:27017"
+    volumes: !override
+      - mongo_data_e2e:/data/db
+
+  redis:
+    volumes: !override
+      - redis_data_e2e:/data
+
+volumes:
+  mongo_data_e2e:
+  redis_data_e2e:

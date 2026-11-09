@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{ static_href('planogram.css') }}">
+{% endblock %}
+{% block body %}
+<p class="admin-hint">Очередь регистрации границы (не смешивается со списком MM domain-products).</p>
+{% if flash %}
+<p class="admin-hint" role="status">{{ flash }}</p>
+{% endif %}
+
+{% if queue_rows %}
+<form method="post" action="/admin/coffee-border-registration/save" id="coffee-border-save-form">
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin">
+      <div class="admin-filters">
+        <label>
+          Поиск
+          <input class="admin-filter" id="border-queue-filter" type="search"
+                 placeholder="код или имя МС…" autocomplete="off">
+        </label>
+        <span class="admin-muted" id="border-queue-count">показано {{ queue_rows|length }} из {{ queue_rows|length }}</span>
+      </div>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="border-queue-table">
+        <thead>
+          <tr>
+            <th class="sortable" scope="col" data-sort="code" aria-sort="none">Код МС</th>
+            <th class="sortable" scope="col" data-sort="name" aria-sort="none">Имя МС</th>
+            <th scope="col">Доменный ингредиент</th>
+            <th scope="col">Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in queue_rows %}
+          <tr data-code="{{ row.ms_code }}"
+              data-filter="{{ row.ms_code }} {{ row.ms_name or '' }}"
+              data-ignored="false">
+            <td class="demo-col-code">{{ row.ms_code }}</td>
+            <td>{{ row.ms_name or "—" }}</td>
+            <td>
+              <input type="hidden" name="ms_code" value="{{ row.ms_code }}">
+              <input type="hidden" name="ignored" value="0" class="border-ignored-field">
+              <span class="border-ignore-mark admin-muted" hidden>Будет игнорироваться</span>
+              <div class="planogram-product-picker border-product-picker">
+                <input type="search"
+                       class="planogram-product-search admin-cell-input"
+                       placeholder="Название ингредиента…"
+                       autocomplete="off"
+                       aria-label="Поиск доменного ингредиента"
+                       aria-autocomplete="list">
+                <span class="planogram-product-selected" hidden>
+                  <a class="planogram-product-link" href="#" target="_blank" rel="noopener"></a>
+                </span>
+                <button type="button" class="planogram-product-clear" aria-label="Убрать ингредиент" hidden>×</button>
+                <input type="hidden"
+                       class="planogram-domain-product-id"
+                       name="domain_product_id"
+                       value="">
+                <input type="hidden" class="planogram-legacy-product-code" value="">
+                <ul class="planogram-product-options" hidden role="listbox"></ul>
+              </div>
+            </td>
+            <td>
+              <div class="admin-row-actions">
+                <button type="button" class="admin-btn admin-btn-secondary border-ignore-btn">Игнорировать</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% call admin_save_bar() %}
+    <button type="submit" class="admin-btn">Сохранить</button>
+  {% endcall %}
+</form>
+<script type="application/json" id="planogram-domain-product-options">{{ ingredient_options_json | safe }}</script>
+<script src="{{ static_href('planogram_product_picker.js') }}" defer></script>
+<script src="{{ static_href('coffee_border_registration.js') }}" defer></script>
+{% else %}
+<p class="admin-muted">Очередь пуста.</p>
+{% endif %}
+
+{% if ignored %}
+<h2>Уже игнорируются</h2>
+<ul>
+  {% for row in ignored %}
+    <li>{{ row.ms_code }} — {{ row.ms_name or "—" }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

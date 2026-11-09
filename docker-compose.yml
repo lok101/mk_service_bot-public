@@ -1,0 +1,282 @@
+# Requires Docker Compose v2 + BuildKit (default).
+#
+# Dev forms-loop (bot ↔ form: app + effects-worker + mongo + redis):
+#   cp .env.dev.example .env.dev
+#   docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile forms-loop up -d --build
+#
+# Dev full workers:
+#   docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile full up -d --build
+#
+# Prod (HTTPS via Caddy, set DOMAIN in .env.prod):
+#   cp .env.prod.example .env.prod
+#   docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml --profile full --profile with-proxy up -d --build
+#
+# Profiles: forms-loop = core; full = core + background workers; with-proxy = Caddy.
+# --env-file is required for ${MONGODB_PASSWORD} etc. in this file; service env_file only affects containers.
+#
+# Images:
+#   mk-service-bot:app — slim (Dockerfile), shared by app + non-ML workers
+#   mk-service-bot:visit-photo-grouping — torch/open_clip (Dockerfile.visit-photo-grouping)
+
+x-app-image: &app-image
+  image: mk-service-bot:app
+  build:
+    context: .
+    dockerfile: Dockerfile
+
+# Slim workers load full Settings; VisitPhotoReviewSettings requires catalog.json
+# when VISIT_PHOTO_REVIEW_ENABLED=true. app / grouping-worker keep RW mounts below.
+x-visit-photo-pack-ro: &visit-photo-pack-ro
+  type: bind
+  source: ${VISIT_PHOTO_GROUPING_PACK_HOST_DIR:-./data/visit-photo-pack}
+  target: ${VISIT_PHOTO_GROUPING_PACK_DIR:-/var/lib/mk-service-bot/visit-photo-pack}
+  read_only: true
+
+services:
+  app:
+    <<: *app-image
+    profiles: ["forms-loop", "full"]
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      API_HOST: 0.0.0.0
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      REDIS_URI: redis://redis:6379/0
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+      GOOGLE_FORMS_USER_OAUTH_CREDENTIALS_FILE: google-forms-user-oauth.json
+      VISIT_PHOTO_GROUPING_PACK_DIR: ${VISIT_PHOTO_GROUPING_PACK_DIR:-/var/lib/mk-service-bot/visit-photo-pack}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      # long syntax: without "./" short form is treated as a named volume
+      - type: bind
+        source: ${GOOGLE_FORMS_USER_OAUTH_CREDENTIALS_FILE:-./docker/e2e/google-forms-user-oauth.json}
+        target: /app/google-forms-user-oauth.json
+        read_only: true
+      - type: bind
+        source: ${VISIT_PHOTO_GROUPING_PACK_HOST_DIR:-./data/visit-photo-pack}
+        target: ${VISIT_PHOTO_GROUPING_PACK_DIR:-/var/lib/mk-service-bot/visit-photo-pack}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+      redis: 
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  effects-worker:
+    <<: *app-image
+    profiles: ["forms-loop", "full"]
+    command: python run_effects_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      REDIS_URI: redis://redis:6379/0
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+      GOOGLE_FORMS_USER_OAUTH_CREDENTIALS_FILE: google-forms-user-oauth.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - type: bind
+        source: ${GOOGLE_FORMS_USER_OAUTH_CREDENTIALS_FILE:-./docker/e2e/google-forms-user-oauth.json}
+        target: /app/google-forms-user-oauth.json
+        read_only: true
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  matrix-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_matrix_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  sales-monitoring-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_sales_monitoring_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  daily-sales-demand-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_daily_sales_demand_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  machine-pnl-month-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_machine_pnl_month_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  service-visits-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_service_visits_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  event-reminders-worker:
+    <<: *app-image
+    profiles: ["full"]
+    command: python run_event_reminders_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - *visit-photo-pack-ro
+
+  visit-photo-grouping-worker:
+    image: mk-service-bot:visit-photo-grouping
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile.visit-photo-grouping
+    command: python run_visit_photo_grouping_worker.py
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      MONGODB_URI: mongodb://${MONGODB_USERNAME:-mk_service_bot}:${MONGODB_PASSWORD}@mongo:27017/${MONGODB_DATABASE:-mk_service_bot}?authSource=admin
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: credentials.json
+      VISIT_PHOTO_GROUPING_PACK_DIR: ${VISIT_PHOTO_GROUPING_PACK_DIR:-/var/lib/mk-service-bot/visit-photo-pack}
+    volumes:
+      - ${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE}:/app/credentials.json:ro
+      - type: bind
+        source: ${VISIT_PHOTO_GROUPING_PACK_HOST_DIR:-./data/visit-photo-pack}
+        target: ${VISIT_PHOTO_GROUPING_PACK_DIR:-/var/lib/mk-service-bot/visit-photo-pack}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7
+    profiles: ["forms-loop", "full"]
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-mk_service_bot}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?Set MONGODB_PASSWORD in .env.dev for Docker Compose}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mongosh -u "$$MONGO_INITDB_ROOT_USERNAME" -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "db.adminCommand(''ping'').ok" || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["forms-loop", "full"]
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  caddy:
+    profiles: ["with-proxy"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    environment:
+      API_PORT: ${API_PORT:-8000}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  redis_data:
+  mongo_data:
+  caddy_data:
+  caddy_config:

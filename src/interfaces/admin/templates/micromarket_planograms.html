@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Холодильники{% endblock %}
+{% block page_title %}Холодильники{% endblock %}
+{% block head %}
+  {% if active_tab == 'prices' %}
+  <link rel="stylesheet" href="{{ planogram_css_href }}">
+  {% endif %}
+{% endblock %}
+{% block body %}
+  <div class="admin-workspace-tabs">
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="machines"
+            aria-selected="{% if active_tab == 'machines' %}true{% else %}false{% endif %}">Аппараты</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="tasks"
+            aria-selected="{% if active_tab == 'tasks' %}true{% else %}false{% endif %}">Задачи</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="orders"
+            aria-selected="{% if active_tab == 'orders' %}true{% else %}false{% endif %}">Заказы</button>
+    <button type="button"
+            class="admin-workspace-tab"
+            data-tab="prices"
+            aria-selected="{% if active_tab == 'prices' %}true{% else %}false{% endif %}">Цены</button>
+  </div>
+
+  {% if create_error %}
+  <p class="admin-hint">{{ create_error }}</p>
+  {% endif %}
+
+  <div class="admin-workspace-panel" data-tab="machines"{% if active_tab != 'machines' %} hidden{% endif %}>
+    <form id="micromarket-planograms-create-order" method="post" action="/admin/micromarket-planograms/orders">
+      <p>
+        <label for="expected_arrival_at">Прибытие</label>
+        <input
+          id="expected_arrival_at"
+          type="datetime-local"
+          name="expected_arrival_at"
+          required
+        >
+      </p>
+      <div class="admin-table-wrap">
+        <table class="admin-roster" id="micromarket-planograms-table">
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Аппарат</th>
+              <th scope="col">Нужно</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if rows %}
+            {% for row in rows %}
+            <tr>
+              <td>
+                <input type="checkbox" name="machine_id" value="{{ row.machine_id }}">
+              </td>
+              <td>
+                <a href="/admin/micromarket-planograms/{{ row.machine_id }}">{{ row.display_name }}</a>
+              </td>
+              <td>{{ row.need_total }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+              <td colspan="3" class="admin-muted">Микромаркетов в парке нет.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+
+  <div class="admin-workspace-panel" data-tab="tasks"{% if active_tab != 'tasks' %} hidden{% endif %}>
+    {% with show_machine_column=true %}
+    {% include "micromarket_shop_list_publish_tasks.html" %}
+    {% endwith %}
+  </div>
+
+  <div class="admin-workspace-panel" data-tab="orders"{% if active_tab != 'orders' %} hidden{% endif %}>
+    <div class="admin-table-wrap">
+      <table class="admin-roster" data-micromarket-supply-orders>
+        <thead>
+          <tr>
+            <th scope="col">Время</th>
+            <th scope="col">Аппараты</th>
+            <th scope="col">Строки</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in supply_order_rows %}
+          <tr>
+            <td>{{ row.created_at_label }}</td>
+            <td>{{ row.machine_count }}</td>
+            <td>{{ row.line_count }}</td>
+            <td>
+              <a href="/admin/micromarket-planograms/orders/{{ row.order_id }}/download">Скачать</a>
+              <form method="post"
+                    action="/admin/micromarket-planograms/orders/{{ row.order_id }}/delete"
+                    style="display:inline">
+                <button type="submit" class="admin-btn-danger">Удалить</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="admin-muted">Пока нет заказов снабжения</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="admin-workspace-panel" data-tab="prices"{% if active_tab != 'prices' %} hidden{% endif %}>
+    {% if prices_error %}
+    <p class="admin-error">{{ prices_error }}</p>
+    {% endif %}
+    {% if not prices_can_edit %}
+    <p class="admin-hint">Правила цен доступны только для чтения.</p>
+    {% endif %}
+    <form id="micromarket-prices-form" method="post" action="/admin/micromarket-planograms/prices">
+      <div class="admin-table-wrap">
+        <table class="admin-roster">
+          <tbody>
+            <tr>
+              <th scope="row"><label for="margin_percent">Наценка, %</label></th>
+              <td>
+                <input class="admin-cell-input" id="margin_percent" name="margin_percent"
+                       value="{{ prices_margin_percent }}" inputmode="decimal"
+                       {% if not prices_can_edit %}disabled{% endif %}>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row"><label for="margin_floor">Мин. наценка, ₽</label></th>
+              <td>
+                <input class="admin-cell-input" id="margin_floor" name="margin_floor"
+                       value="{{ prices_margin_floor }}" inputmode="decimal"
+                       {% if not prices_can_edit %}disabled{% endif %}>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row"><label for="rounding_last_digits">Округление (цифры через запятую)</label></th>
+              <td>
+                <input class="admin-cell-input" id="rounding_last_digits" name="rounding_last_digits"
+                       value="{{ prices_rounding_last_digits }}"
+                       {% if not prices_can_edit %}disabled{% endif %}>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Множители аппаратов</h3>
+      <div class="admin-table-wrap">
+        <table class="admin-roster" id="prices-machines-table">
+          <thead>
+            <tr>
+              <th scope="col">Код</th>
+              <th scope="col">Имя</th>
+              <th scope="col">Множитель</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for mid, name, mult in prices_machine_rows %}
+            <tr>
+              <td>{{ mid }}<input type="hidden" name="machine_id" value="{{ mid }}"></td>
+              <td>{{ name }}</td>
+              <td><input class="admin-cell-input" name="machine_multiplier" value="{{ mult }}" {% if not prices_can_edit %}disabled{% endif %}></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="admin-muted">Нет холодильников</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <h3>Множители товаров</h3>
+      <script type="application/json" id="planogram-domain-product-options">{{ prices_product_options_json | safe }}</script>
+      <div class="admin-table-wrap">
+        <table class="admin-roster" id="prices-products-table">
+          <thead>
+            <tr>
+              <th scope="col">Товар</th>
+              <th scope="col">Множитель</th>
+            </tr>
+          </thead>
+          <tbody id="prices-products-tbody">
+            {% for domain_id, name, mult in prices_product_rows %}
+            <tr>
+              <td>
+                {% with domain_product_id=domain_id, product_name=name %}
+                {% include "_prices_product_picker.html" %}
+                {% endwith %}
+              </td>
+              <td><input class="admin-cell-input" name="product_multiplier" value="{{ mult }}" {% if not prices_can_edit %}disabled{% endif %}></td>
+            </tr>
+            {% endfor %}
+            {% if prices_can_edit %}
+            <tr class="prices-product-blank">
+              <td>
+                {% with domain_product_id="", product_name="" %}
+                {% include "_prices_product_picker.html" %}
+                {% endwith %}
+              </td>
+              <td><input class="admin-cell-input" name="product_multiplier" value="" placeholder="1.0"></td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <h3>История цен</h3>
+      <p class="admin-hint">Окно: последние 50 · без пагинации</p>
+      <div class="admin-roster-chrome" id="prices-history-chrome">
+        <div class="admin-roster-chrome-pin" id="prices-history-chrome-pin">
+          <div class="admin-filters" id="prices-history-filters">
+            <label>День
+              <input type="search" id="prices-filter-day" placeholder="дд.мм.гг" autocomplete="off" aria-label="День">
+            </label>
+            <label>Поиск (код / имя)
+              <input type="search" id="prices-filter-machine" placeholder="701 или ресепшн" autocomplete="off">
+            </label>
+            <label>Товар
+              <input type="search" id="prices-filter-product" placeholder="Вода" autocomplete="off">
+            </label>
+            <label>Origin
+              <select id="prices-filter-origin" aria-label="Origin">
+                <option value="">все</option>
+                <option value="manual">manual</option>
+                <option value="reset">reset</option>
+                <option value="calculated">calculated</option>
+              </select>
+            </label>
+            <p class="admin-muted">Показано <span id="prices-history-visible">0</span> из
+              <span id="prices-history-total">0</span></p>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-roster" id="prices-history-table">
+            <thead>
+              <tr>
+                <th scope="col" class="sortable" data-sort-key="at" aria-sort="descending">Когда</th>
+                <th scope="col" class="sortable" data-sort-key="code" aria-sort="none">Код</th>
+                <th scope="col" class="sortable" data-sort-key="name" aria-sort="none">Имя</th>
+                <th scope="col" class="sortable" data-sort-key="product" aria-sort="none">Товар</th>
+                <th scope="col" class="sortable" data-sort-key="old" aria-sort="none">Было</th>
+                <th scope="col" class="sortable" data-sort-key="new" aria-sort="none">Стало</th>
+                <th scope="col" class="sortable" data-sort-key="origin" aria-sort="none">Origin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in prices_journal_rows %}
+              <tr data-day="{{ row.at_day }}"
+                  data-code="{{ row.machine_id }}"
+                  data-name="{{ row.machine_name }}"
+                  data-product="{{ row.product_name }}"
+                  data-old="{{ row.old }}"
+                  data-new="{{ row.new }}"
+                  data-origin="{{ row.origin }}"
+                  data-at="{{ row.at }}">
+                <td>{{ row.at }}</td>
+                <td>{{ row.machine_id }}</td>
+                <td>{{ row.machine_name }}</td>
+                <td>{{ row.product_name }}</td>
+                <td>{{ row.old }}</td>
+                <td>{{ row.new }}</td>
+                <td>{{ row.origin }}{% if row.reason %} ({{ row.reason }}){% endif %}</td>
+              </tr>
+              {% else %}
+              <tr class="prices-history-empty"><td colspan="7" class="admin-muted">Записей пока нет</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% call admin_save_bar(hidden=(active_tab != 'machines' and active_tab != 'prices')) %}
+      {% if active_tab == 'prices' and prices_can_edit %}
+      <button type="submit" form="micromarket-prices-form">Сохранить</button>
+      {% elif active_tab == 'machines' %}
+      <button type="submit" form="micromarket-planograms-create-order">Создать заказ</button>
+      {% endif %}
+  {% endcall %}
+
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll(".admin-workspace-tab");
+      var panels = document.querySelectorAll(".admin-workspace-panel");
+      var saveBar = document.querySelector(".admin-save-bar");
+      var tasksPollTimer = null;
+      function stopTasksPoll() {
+        if (tasksPollTimer !== null) {
+          clearInterval(tasksPollTimer);
+          tasksPollTimer = null;
+        }
+      }
+      function startTasksPoll() {
+        stopTasksPoll();
+        tasksPollTimer = setInterval(function () {
+          var active = document.querySelector(
+            '.admin-workspace-tab[aria-selected="true"]'
+          );
+          if (!active || active.getAttribute("data-tab") !== "tasks") {
+            stopTasksPoll();
+            return;
+          }
+          window.location.reload();
+        }, 7000);
+      }
+      function selectTab(selected) {
+        var url = new URL(document.URL);
+        url.searchParams.delete("download");
+        if (selected === "orders" || selected === "prices") {
+          url.searchParams.set("tab", selected);
+          window.location.assign(url.toString());
+          return;
+        }
+        tabs.forEach(function (item) {
+          item.setAttribute(
+            "aria-selected",
+            item.getAttribute("data-tab") === selected ? "true" : "false"
+          );
+        });
+        panels.forEach(function (panel) {
+          if (panel.getAttribute("data-tab") === selected) {
+            panel.removeAttribute("hidden");
+          } else {
+            panel.setAttribute("hidden", "");
+          }
+        });
+        if (saveBar) {
+          if (selected === "machines") {
+            saveBar.removeAttribute("hidden");
+          } else {
+            saveBar.setAttribute("hidden", "");
+          }
+        }
+        if (selected === "machines") {
+          url.searchParams.delete("tab");
+        } else {
+          url.searchParams.set("tab", selected);
+        }
+        window.history.replaceState({}, "", url.toString());
+        if (selected === "tasks") {
+          startTasksPoll();
+        } else {
+          stopTasksPoll();
+        }
+      }
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          selectTab(tab.getAttribute("data-tab"));
+        });
+      });
+      {% if active_tab == 'tasks' %}
+      /* tasks-poll-autostart */
+      startTasksPoll();
+      {% endif %}
+      {% if auto_download_order_id %}
+      (function () {
+        var orderId = {{ auto_download_order_id|tojson }};
+        var frame = document.createElement("iframe");
+        frame.setAttribute("hidden", "");
+        frame.setAttribute("aria-hidden", "true");
+        frame.src = "/admin/micromarket-planograms/orders/" + orderId + "/download";
+        document.body.appendChild(frame);
+        var clean = new URL(document.URL);
+        clean.searchParams.delete("download");
+        window.history.replaceState({}, "", clean.toString());
+      })();
+      {% endif %}
+      {% if active_tab == 'prices' %}
+      (function () {
+        var tbody = document.querySelector("#prices-history-table tbody");
+        if (!tbody) return;
+        var rows = Array.prototype.slice.call(
+          tbody.querySelectorAll("tr:not(.prices-history-empty)")
+        );
+        var sortKey = "at";
+        var sortDir = "desc";
+        var totalEl = document.getElementById("prices-history-total");
+        var visibleEl = document.getElementById("prices-history-visible");
+        if (totalEl) totalEl.textContent = String(rows.length);
+
+        function applyFilters() {
+          var day = (document.getElementById("prices-filter-day").value || "").trim();
+          var machineQ = (document.getElementById("prices-filter-machine").value || "")
+            .trim()
+            .toLowerCase();
+          var productQ = (document.getElementById("prices-filter-product").value || "")
+            .trim()
+            .toLowerCase();
+          var originQ = document.getElementById("prices-filter-origin").value;
+          var visible = 0;
+          rows.forEach(function (tr) {
+            var ok = true;
+            if (day && (tr.getAttribute("data-day") || "") !== day) ok = false;
+            if (machineQ) {
+              var hay =
+                (tr.getAttribute("data-code") || "") +
+                " " +
+                (tr.getAttribute("data-name") || "");
+              if (hay.toLowerCase().indexOf(machineQ) === -1) ok = false;
+            }
+            if (
+              productQ &&
+              (tr.getAttribute("data-product") || "").toLowerCase().indexOf(productQ) === -1
+            ) {
+              ok = false;
+            }
+            if (originQ && (tr.getAttribute("data-origin") || "") !== originQ) ok = false;
+            tr.hidden = !ok;
+            if (ok) visible += 1;
+          });
+          if (visibleEl) visibleEl.textContent = String(visible);
+        }
+
+        function sortRows() {
+          rows.sort(function (a, b) {
+            var av;
+            var bv;
+            if (sortKey === "old" || sortKey === "new") {
+              av = Number(a.getAttribute("data-" + sortKey) || "0");
+              bv = Number(b.getAttribute("data-" + sortKey) || "0");
+            } else if (sortKey === "code") {
+              av = a.getAttribute("data-code") || "";
+              bv = b.getAttribute("data-code") || "";
+            } else if (sortKey === "name") {
+              av = (a.getAttribute("data-name") || "").toLowerCase();
+              bv = (b.getAttribute("data-name") || "").toLowerCase();
+            } else if (sortKey === "product") {
+              av = (a.getAttribute("data-product") || "").toLowerCase();
+              bv = (b.getAttribute("data-product") || "").toLowerCase();
+            } else if (sortKey === "origin") {
+              av = (a.getAttribute("data-origin") || "").toLowerCase();
+              bv = (b.getAttribute("data-origin") || "").toLowerCase();
+            } else {
+              av = a.getAttribute("data-at") || "";
+              bv = b.getAttribute("data-at") || "";
+            }
+            if (av < bv) return sortDir === "asc" ? -1 : 1;
+            if (av > bv) return sortDir === "asc" ? 1 : -1;
+            return 0;
+          });
+          rows.forEach(function (tr) {
+            tbody.appendChild(tr);
+          });
+          document.querySelectorAll("#prices-history-table thead th.sortable").forEach(
+            function (th) {
+              var key = th.getAttribute("data-sort-key");
+              th.setAttribute(
+                "aria-sort",
+                key === sortKey
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : "none"
+              );
+            }
+          );
+        }
+
+        ["prices-filter-day", "prices-filter-machine", "prices-filter-product", "prices-filter-origin"].forEach(
+          function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener("input", applyFilters);
+            el.addEventListener("change", applyFilters);
+          }
+        );
+        document.querySelectorAll("#prices-history-table thead th.sortable").forEach(
+          function (th) {
+            th.addEventListener("click", function () {
+              var key = th.getAttribute("data-sort-key");
+              if (sortKey === key) {
+                sortDir = sortDir === "asc" ? "desc" : "asc";
+              } else {
+                sortKey = key;
+                sortDir = "asc";
+              }
+              sortRows();
+              applyFilters();
+            });
+          }
+        );
+
+        var pin = document.getElementById("prices-history-chrome-pin");
+        function syncPin() {
+          if (!pin) return;
+          document.documentElement.style.setProperty(
+            "--admin-roster-chrome-pin-offset",
+            pin.getBoundingClientRect().height + "px"
+          );
+        }
+        syncPin();
+        window.addEventListener("resize", syncPin);
+        applyFilters();
+
+        var productsTbody = document.getElementById("prices-products-tbody");
+        function ensureBlankProductRow() {
+          if (!productsTbody || productsTbody.querySelector(".prices-product-blank")) return;
+          var tr = document.createElement("tr");
+          tr.className = "prices-product-blank";
+          tr.innerHTML =
+            '<td><div class="planogram-product-picker">' +
+            '<input type="search" class="planogram-product-search admin-cell-input" placeholder="Название товара…" autocomplete="off" aria-label="Поиск товара" aria-autocomplete="list">' +
+            '<span class="planogram-product-selected" hidden><a class="planogram-product-link" href="#" target="_blank" rel="noopener"></a></span>' +
+            '<button type="button" class="planogram-product-clear" aria-label="Убрать товар" hidden>✕</button>' +
+            '<input type="hidden" class="planogram-domain-product-id" name="product_domain_id" value="">' +
+            '<input type="hidden" class="planogram-legacy-product-code" name="product_legacy_code" value="">' +
+            '<ul class="planogram-product-options" hidden role="listbox"></ul>' +
+            "</div></td>" +
+            '<td><input class="admin-cell-input" name="product_multiplier" value="" placeholder="1.0"></td>';
+          productsTbody.appendChild(tr);
+        }
+        if (productsTbody) {
+          productsTbody.addEventListener("planogram-product-selection-changed", function (ev) {
+            var tr = ev.target.closest("tr");
+            if (!tr) return;
+            if (ev.detail && ev.detail.action === "apply") {
+              tr.classList.remove("prices-product-blank");
+              ensureBlankProductRow();
+            }
+          });
+        }
+      })();
+      {% endif %}
+    })();
+  </script>
+  {% if active_tab == 'prices' %}
+  <script src="{{ planogram_product_picker_js_href }}" defer></script>
+  {% endif %}
+{% endblock %}

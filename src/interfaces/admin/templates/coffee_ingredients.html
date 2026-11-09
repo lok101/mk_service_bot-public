@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+{% if can_create %}
+<p class="admin-hint">
+  <a class="admin-btn" href="/admin/coffee-ingredients/new">Добавить</a>
+  <a href="/admin/coffee-form-policies">Политики qty форм</a>
+</p>
+{% else %}
+<p class="admin-hint"><a href="/admin/coffee-form-policies">Политики qty форм</a></p>
+{% endif %}
+
+<div class="admin-roster-chrome">
+  <div class="admin-roster-chrome-pin">
+    <div class="admin-filters">
+      <label>Поиск
+        <input type="search" id="coffee-ingredients-search"
+               placeholder="имя, номер или код МС…" autocomplete="off">
+      </label>
+      <label>Ед.
+        <select id="coffee-ingredients-unit-filter">
+          <option value="all">все</option>
+          <option value="г">г</option>
+          <option value="кг">кг</option>
+          <option value="мл">мл</option>
+          <option value="шт">шт</option>
+        </select>
+      </label>
+      <label>Связи
+        <select id="coffee-ingredients-link-filter">
+          <option value="all">все</option>
+          <option value="linked">есть связи</option>
+          <option value="unlinked">нет связей</option>
+        </select>
+      </label>
+      <p class="admin-muted">Показано
+        <span id="coffee-ingredients-visible-count">{{ rows|length }}</span>
+        из <span id="coffee-ingredients-total-count">{{ rows|length }}</span></p>
+    </div>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-roster coffee-ingredients-table" id="coffee-ingredients-table">
+      <thead>
+        <tr>
+          <th scope="col" class="sortable" data-sort-key="number">Номер</th>
+          <th scope="col" class="sortable" data-sort-key="name">Имя</th>
+          <th scope="col" class="sortable" data-sort-key="unit">Ед.</th>
+          <th scope="col" class="sortable" data-sort-key="pack">Упаковка</th>
+          <th scope="col" class="sortable" data-sort-key="codes">Коды МС</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+        <tr
+          data-number="{{ row.number }}"
+          data-name="{{ row.name }}"
+          data-unit="{{ row.unit }}"
+          data-pack="{{ row.pack_size }}"
+          data-codes="{{ row.codes }}"
+          data-linked="{% if row.codes %}1{% else %}0{% endif %}"
+        >
+          <td class="coffee-ing-col-number">{{ row.number }}</td>
+          <td>
+            <a class="admin-entity-link" href="/admin/coffee-ingredients/{{ row.id }}">{{ row.name }}</a>
+          </td>
+          <td class="coffee-ing-col-unit">{{ row.unit }}</td>
+          <td class="coffee-ing-col-pack">{{ row.pack_size }}</td>
+          <td class="coffee-ing-col-codes">{{ row.codes or "—" }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">Нет ингредиентов</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if hidden_rows %}
+<h2>Скрытые</h2>
+<div class="admin-table-wrap">
+  <table class="admin-roster">
+    <thead>
+      <tr>
+        <th>Номер</th>
+        <th>Имя</th>
+        <th>Ед.</th>
+        <th>Упаковка</th>
+        <th>Коды МС</th>
+        {% if can_hide %}<th></th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in hidden_rows %}
+      <tr>
+        <td>{{ row.number }}</td>
+        <td>{{ row.name }}</td>
+        <td>{{ row.unit }}</td>
+        <td>{{ row.pack_size }}</td>
+        <td>{{ row.codes or "—" }}</td>
+        {% if can_hide %}
+        <td>
+          <form class="admin-inline-form" method="post" action="/admin/coffee-ingredients/unhide">
+            <input type="hidden" name="domain_product_id" value="{{ row.id }}">
+            <button type="submit">Восстановить</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{{ static_href('coffee_ingredients.js') }}" defer></script>
+{% endblock %}

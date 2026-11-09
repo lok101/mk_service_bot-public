@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+<p><a href="/admin/coffee-ingredients">← Ингредиенты</a></p>
+<nav class="coffee-policy-profile-tabs" aria-label="Профиль формы">
+  {% for pid in profile_ids %}
+  <a href="/admin/coffee-form-policies?profile={{ pid }}"{% if pid == profile_id %} class="is-active"{% endif %}>{{ pid }}</a>
+  {% endfor %}
+</nav>
+{% if error %}
+<p class="admin-error">{{ error }}</p>
+{% endif %}
+{% if can_edit %}
+<form method="post" action="/admin/coffee-form-policies" id="coffee-form-policies">
+  <input type="hidden" name="profile_id" value="{{ profile_id }}">
+  <input type="hidden" name="action" value="bulk_save">
+  <ul class="coffee-policy-tile-list" id="coffee-policy-tile-list">
+  {% for row in lines %}
+    <li class="coffee-policy-tile" data-domain-number="{{ row.domain_number }}">
+      <div class="coffee-policy-tile-drag" aria-label="Перетащить {{ row.domain_number }}" title="Перетащите, чтобы задать порядок в форме">⋮⋮</div>
+      <div class="coffee-policy-tile-body">
+        <div class="coffee-policy-tile-top">
+          <input type="hidden" name="domain_number" value="{{ row.domain_number }}">
+          <label class="coffee-policy-field coffee-policy-field--code coffee-policy-field--readonly">
+            <span>Номер</span>
+            <div class="coffee-policy-field-value">{{ row.domain_number }}</div>
+          </label>
+          <label class="coffee-policy-field coffee-policy-field--name coffee-policy-field--readonly">
+            <span>Имя</span>
+            <div class="coffee-policy-field-value">{{ row.name }}</div>
+          </label>
+          <label class="coffee-policy-field coffee-policy-field--label">
+            <span>В форме</span>
+            <input class="coffee-policy-field-input" name="form_label" value="{{ row.form_label }}"
+                   placeholder="{{ row.name }}" autocomplete="off"
+                   aria-label="Подпись в форме {{ row.domain_number }}">
+          </label>
+          {% if show_min_max %}
+          <label class="coffee-policy-field coffee-policy-field--qty">
+            <span>Min ({{ qty_unit_label }})</span>
+            <input class="coffee-policy-field-input" name="min_qty" inputmode="decimal"
+                   value="{{ row.min_qty }}" autocomplete="off"
+                   aria-label="Min {{ row.domain_number }}">
+          </label>
+          <label class="coffee-policy-field coffee-policy-field--qty">
+            <span>Max ({{ qty_unit_label }})</span>
+            <input class="coffee-policy-field-input" name="max_qty" inputmode="decimal"
+                   value="{{ row.max_qty }}" autocomplete="off"
+                   aria-label="Max {{ row.domain_number }}">
+          </label>
+          {% endif %}
+          {% if show_radio %}
+          <label class="coffee-policy-field coffee-policy-field--qty">
+            <span>Radio N ({{ qty_unit_label }})</span>
+            <input class="coffee-policy-field-input" name="radio_n" inputmode="numeric"
+                   value="{{ row.radio_n }}" autocomplete="off"
+                   aria-label="Radio N {{ row.domain_number }}">
+          </label>
+          {% endif %}
+        </div>
+        <label class="coffee-policy-field coffee-policy-field--hint">
+          <span>Пояснение</span>
+          <textarea class="coffee-policy-field-input" name="form_hint" rows="1"
+                    placeholder="Текст под названием в форме…"
+                    aria-label="Пояснение в форме {{ row.domain_number }}">{{ row.form_hint }}</textarea>
+        </label>
+      </div>
+    </li>
+  {% else %}
+    <li class="coffee-policy-empty">Нет строк</li>
+  {% endfor %}
+  </ul>
+  {% call admin_save_bar() %}
+    <button type="submit">Сохранить</button>
+  {% endcall %}
+</form>
+<script>
+(function () {
+  "use strict";
+  var list = document.getElementById("coffee-policy-tile-list");
+  if (!list) return;
+  var dragTile = null;
+  function clearDragOver() {
+    list.querySelectorAll(".coffee-policy-tile").forEach(function (el) {
+      el.classList.remove("coffee-policy-drag-over");
+    });
+  }
+  list.querySelectorAll(".coffee-policy-tile").forEach(function (tile) {
+    var handle = tile.querySelector(".coffee-policy-tile-drag");
+    if (!handle) return;
+    handle.draggable = true;
+    handle.addEventListener("dragstart", function (event) {
+      dragTile = tile;
+      tile.classList.add("coffee-policy-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", tile.dataset.domainNumber || "");
+    });
+    handle.addEventListener("dragend", function () {
+      dragTile = null;
+      tile.classList.remove("coffee-policy-dragging");
+      clearDragOver();
+    });
+    tile.addEventListener("dragover", function (event) {
+      if (!dragTile || dragTile === tile) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      tile.classList.add("coffee-policy-drag-over");
+    });
+    tile.addEventListener("dragleave", function () {
+      tile.classList.remove("coffee-policy-drag-over");
+    });
+    tile.addEventListener("drop", function (event) {
+      if (!dragTile || dragTile === tile) return;
+      event.preventDefault();
+      clearDragOver();
+      var tiles = Array.prototype.slice.call(list.querySelectorAll(".coffee-policy-tile"));
+      var from = tiles.indexOf(dragTile);
+      var to = tiles.indexOf(tile);
+      if (from < 0 || to < 0) return;
+      if (from < to) {
+        list.insertBefore(dragTile, tile.nextSibling);
+      } else {
+        list.insertBefore(dragTile, tile);
+      }
+    });
+  });
+})();
+</script>
+{% else %}
+<ul class="coffee-policy-tile-list">
+{% for row in lines %}
+  <li class="coffee-policy-tile">
+    <div class="coffee-policy-tile-body">
+      <div class="coffee-policy-tile-top">
+        <label class="coffee-policy-field coffee-policy-field--code coffee-policy-field--readonly">
+          <span>Номер</span>
+          <div class="coffee-policy-field-value">{{ row.domain_number }}</div>
+        </label>
+        <label class="coffee-policy-field coffee-policy-field--name coffee-policy-field--readonly">
+          <span>Имя</span>
+          <div class="coffee-policy-field-value">{{ row.name }}</div>
+        </label>
+        <label class="coffee-policy-field coffee-policy-field--label coffee-policy-field--readonly">
+          <span>В форме</span>
+          <div class="coffee-policy-field-value">{{ row.form_label or "—" }}</div>
+        </label>
+        {% if show_min_max %}
+        <label class="coffee-policy-field coffee-policy-field--qty coffee-policy-field--readonly">
+          <span>Min ({{ qty_unit_label }})</span>
+          <div class="coffee-policy-field-value">{{ row.min_qty }}</div>
+        </label>
+        <label class="coffee-policy-field coffee-policy-field--qty coffee-policy-field--readonly">
+          <span>Max ({{ qty_unit_label }})</span>
+          <div class="coffee-policy-field-value">{{ row.max_qty }}</div>
+        </label>
+        {% endif %}
+        {% if show_radio %}
+        <label class="coffee-policy-field coffee-policy-field--qty coffee-policy-field--readonly">
+          <span>Radio N ({{ qty_unit_label }})</span>
+          <div class="coffee-policy-field-value">{{ row.radio_n }}</div>
+        </label>
+        {% endif %}
+      </div>
+      {% if row.form_hint %}
+      <label class="coffee-policy-field coffee-policy-field--hint coffee-policy-field--readonly">
+        <span>Пояснение</span>
+        <div class="coffee-policy-field-value">{{ row.form_hint }}</div>
+      </label>
+      {% endif %}
+    </div>
+  </li>
+{% else %}
+  <li class="coffee-policy-empty">Нет строк</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

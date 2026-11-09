@@ -1,0 +1,58 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.import_linter_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+
+/.env.dev
+/.env.prod
+/.env.e2e
+/.env.moysklad-live
+/.env.matrix-kit-live
+/__test__.py
+/credentials.json
+/google-forms-user-oauth.json
+/kitvending_accounts.json
+/kit_platform_accounts.json
+/kitvending_accounts_live_test.json
+/coffee_recipes.json
+/TASKS.md
+
+ruff.json
+
+# Local agent-contract runtime: active.json, evidence, attribution, agent scratch
+/.cursor/agent-contract/runtime/
+/.cache/verification/
+/verification/tla/traces/generated/
+/verification/tla/states/
+
+/visit-photo-pack/
+/data/
+/desktop_client_secret.json
+
+# Nested agent worktrees under primary (canonical lanes live at ../mk_service_bot-wt/)
+/mk_service_bot-wt/
+
+# AGT-009: process skills mounted from agent_platform (scripts/agent_platform_mount.py)
+.cursor/skills/*
+!.cursor/skills/admin-ui-demo/
+!.cursor/skills/om-canon-write/
+!.cursor/skills/om-code-audit/
+!.cursor/skills/worked-case/
+!.cursor/skills/operating-case/
+!.cursor/skills/update-agents-md/

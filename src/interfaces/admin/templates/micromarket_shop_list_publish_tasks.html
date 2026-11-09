@@ -1,0 +1,49 @@
+{# Shared Tasks feed: ShopListPublishJournal + loading cycle rows.
+   Context: shop_list_publish_journal_rows, show_machine_column #}
+<div class="admin-table-wrap">
+  <table class="admin-roster" data-shop-list-publish-tasks>
+    <thead>
+      <tr>
+        <th scope="col">Время</th>
+        {% if show_machine_column %}
+        <th scope="col">Аппарат</th>
+        {% endif %}
+        <th scope="col">Источник</th>
+        <th scope="col">Итог</th>
+        <th scope="col">Статус</th>
+        <th scope="col">Ошибка</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in shop_list_publish_journal_rows %}
+      <tr{% if row.kind == 'loading' %} data-task-kind="loading"{% endif %}>
+        <td>{{ row.created_at_label }}</td>
+        {% if show_machine_column %}
+        <td>{{ row.display_name }} <span class="admin-muted">{{ row.machine_code }}</span></td>
+        {% endif %}
+        <td>{{ row.trigger_label }}</td>
+        <td>
+          <details class="admin-journal-effects">
+            <summary>{{ row.effects_summary }}</summary>
+            {% if row.effects_detail_lines %}
+            <ul class="admin-journal-effects-list">
+              {% for line in row.effects_detail_lines %}
+              <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% elif row.kind != 'loading' %}
+            <span class="admin-muted">Нет изменений SKU</span>
+            {% endif %}
+          </details>
+        </td>
+        <td>{{ row.status_label }}</td>
+        <td>{% if row.error_message %}{{ row.error_message }}{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="{{ 6 if show_machine_column else 5 }}" class="admin-muted">Пока нет задач</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

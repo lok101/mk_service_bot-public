@@ -1,0 +1,130 @@
+{% from "_admin_save_bar.html" import admin_save_bar %}
+  <p class="admin-muted">{{ display_name }}</p>
+
+  {% if admin_error %}
+  <div class="admin-hint admin-user-error" role="alert">
+    <p class="admin-error-cause">{{ admin_error.cause }}</p>
+    <p class="admin-error-action">{{ admin_error.action }}</p>
+    <p class="admin-error-code">{{ admin_error.code }}</p>
+  </div>
+  {% elif message %}
+  <p class="admin-hint">{{ message }}</p>
+  {% endif %}
+
+  {% if assembly_order_summaries %}
+  <div class="admin-table-wrap">
+    <table class="admin-roster">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Создан</th>
+          <th scope="col">Позиций</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in assembly_order_summaries %}
+        <tr class="admin-assembly-order-row{% if row.order_id == selected_assembly_order_id %} is-selected{% endif %}">
+          <td>
+            <a class="admin-entity-link"
+               href="/admin/micromarket-planograms/{{ machine.machine_id.value }}?tab=loading&amp;order={{ row.order_id }}">{{ row.order_id }}</a>
+          </td>
+          <td>{{ row.created_display }}</td>
+          <td>{{ row.position_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="admin-muted">Открытых ордеров сборки нет.</p>
+  {% endif %}
+
+  {% if selected_assembly_order %}
+  <div class="admin-assembly-order-panel">
+    <div class="admin-assembly-order-panel-head">
+      <h2>
+        Ордер {{ selected_assembly_order.order_id }}
+        <span class="admin-muted">{{ selected_assembly_order.created_display }}</span>
+      </h2>
+      <div class="admin-assembly-order-panel-actions">
+        <a href="/admin/machines/{{ machine.machine_id.value }}/micromarket-assembly-orders/{{ selected_assembly_order.order_id }}/print"
+           target="_blank" rel="noopener">Печать</a>
+        <form method="post"
+              action="/admin/machines/{{ machine.machine_id.value }}/micromarket-assembly-orders/{{ selected_assembly_order.order_id }}/cancel">
+          <button type="submit" class="admin-btn-danger">Отменить</button>
+        </form>
+      </div>
+    </div>
+    <form id="micromarket-assembly-order-form"
+          method="post"
+          action="/admin/machines/{{ machine.machine_id.value }}/micromarket-assembly-orders/{{ selected_assembly_order.order_id }}/update">
+      <div class="admin-table-wrap">
+        <table class="admin-roster">
+          <thead>
+            <tr>
+              <th scope="col">Товар (МС)</th>
+              <th scope="col">На складе</th>
+              <th scope="col">Собирается</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in selected_assembly_order.lines %}
+            <tr>
+              <td>
+                {{ line.name }}
+                <input type="hidden" name="catalog_code" value="{{ line.catalog_code }}">
+              </td>
+              <td>{{ line.warehouse_qty_display }}</td>
+              <td class="admin-qty-cell">
+                {% set _invalid = error_target_codes and line.catalog_code in error_target_codes %}
+                {% with name="order_line_qty", value=line.qty, min=0, max=line.stepper_max,
+                        aria_label="order_line_qty",
+                        input_class=("admin-field-invalid" if _invalid else ""),
+                        integer=true %}
+                  {% include "_admin_quantity_stepper.html" %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if has_open_assembly_orders %}
+  <form id="micromarket-assembly-load-form"
+        method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-assembly-orders/load"></form>
+  {% endif %}
+  {% if active_tab == 'loading' and order_open %}
+  <form id="micromarket-loading-rollback-form"
+        method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-loading/rollback"></form>
+  {% endif %}
+
+  {% if active_tab == 'loading' and (selected_assembly_order or order_open) %}
+  {% call admin_save_bar(split=true) %}
+      <div>
+        {% if has_open_assembly_orders %}
+        <button type="submit" form="micromarket-assembly-load-form" class="admin-btn admin-btn-secondary">
+          Загрузить
+        </button>
+        {% endif %}
+        {% if order_open %}
+        <button type="submit" form="micromarket-loading-rollback-form" class="admin-btn admin-btn-danger">
+          Откатить
+        </button>
+        {% endif %}
+      </div>
+      {% if selected_assembly_order %}
+      <button type="submit" form="micromarket-assembly-order-form" class="admin-btn">Сохранить</button>
+      {% else %}
+      <span></span>
+      {% endif %}
+  {% endcall %}
+  {% endif %}
+  {% if selected_assembly_order %}
+  <script src="{{ static_href('admin_quantity_stepper.js') }}" defer></script>
+  {% endif %}

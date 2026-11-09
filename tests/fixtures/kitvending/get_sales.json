@@ -1,0 +1,23 @@
+{
+  "ResultCode": 0,
+  "Sales": [
+    {
+      "LineNumber": 2,
+      "Sum": 1.0,
+      "DateTime": "02.05.2026 12:00:00",
+      "GoodsName": "2312 | Name",
+      "VendingMachine": 99,
+      "VendingMachineName": "Кофе [129] [ X ]",
+      "MatrixId": 5
+    },
+    {
+      "LineNumber": 1,
+      "Sum": 1.0,
+      "DateTime": "02.05.2026 10:00:00",
+      "GoodsName": "Товар 2311",
+      "VendingMachine": 50,
+      "VendingMachineName": "Snacks [501]",
+      "MatrixId": null
+    }
+  ]
+}

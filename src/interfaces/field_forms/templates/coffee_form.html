@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ form_title }}</title>
+  <link rel="stylesheet" href="{{ static_href('field_form.css') }}">
+</head>
+<body class="field-form">
+  <h1>{{ form_title }}</h1>
+  {% if error %}
+  <p class="field-form__error">{{ error }}</p>
+  {% endif %}
+  {% if success %}
+  <p class="field-form__success">Принято</p>
+  {% else %}
+  <form
+    method="post"
+    action="{{ form_path }}"
+    class="field-form__form"
+    id="field-form-coffee"
+    data-input-ui="{{ input_ui }}"
+    {% if require_all_lines %}data-require-all-lines="1"{% endif %}
+  >
+    <input type="hidden" name="token" value="{{ token }}">
+    <section class="field-form__section">
+      <h2>Ингредиенты</h2>
+      {% for line in lines %}
+      {% if input_ui == "radio" and line.radio_n is not none %}
+      <div class="field-form__line field-form__line--tile" data-line-code="{{ line.code }}">
+        <div class="field-form__title">
+          <span class="field-form__name">{{ line.name }}</span>
+          {% if line.hint %}
+          <p class="field-form__hint">{{ line.hint }}</p>
+          {% endif %}
+        </div>
+        <div class="field-form__controls">
+          <div class="field-form__scale" role="radiogroup" aria-label="{{ line.name }}">
+            <div class="field-form__scale-rows">
+              {% for row in line.scale_rows %}
+              <div class="field-form__scale-row">
+                {% for n in row %}
+                <label class="field-form__scale-item">
+                  <input
+                    type="radio"
+                    name="qty_{{ line.code }}"
+                    value="{{ n }}"
+                    data-radio-input
+                    {% if line.value == (n|string) %}checked{% endif %}
+                  >
+                  <span class="field-form__scale-num">{{ n }}</span>
+                  <span class="field-form__scale-dot" aria-hidden="true"></span>
+                </label>
+                {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+            <label class="field-form__scale-zero">
+              <input
+                type="radio"
+                name="qty_{{ line.code }}"
+                value="0"
+                data-radio-input
+                {% if line.value == "0" %}checked{% endif %}
+              >
+              <span class="field-form__scale-num">0</span>
+              <span class="field-form__scale-dot" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="field-form__line" data-line-code="{{ line.code }}">
+        <div class="field-form__title">
+          <span class="field-form__name">{{ line.name }}</span>
+          {% if line.hint %}
+          <p class="field-form__hint">{{ line.hint }}</p>
+          {% endif %}
+        </div>
+        <div class="field-form__controls">
+          <input
+            class="field-form__qty"
+            type="text"
+            inputmode="numeric"
+            name="qty_{{ line.code }}"
+            value="{{ line.value }}"
+            autocomplete="off"
+            data-qty-input
+            {% if line.qty_rule %}
+            data-min="{{ line.qty_rule.min_attr }}"
+            data-max="{{ line.qty_rule.max_attr }}"
+            {% if line.qty_rule.integer %}data-integer="1"{% endif %}
+            {% if line.qty_rule.required %}data-required="1"{% endif %}
+            {% endif %}
+          >
+          {% if not hide_empty_toggle %}
+          <button
+            type="button"
+            class="field-form__empty"
+            data-empty-toggle
+            aria-pressed="false"
+          >Пусто</button>
+          {% endif %}
+        </div>
+        <p class="field-form__field-error" data-field-error hidden></p>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </section>
+    <button class="field-form__submit" type="submit" data-submit>Отправить</button>
+  </form>
+  {% if input_ui == "radio" %}
+  <script src="{{ static_href('coffee_loading_radio.js') }}" defer></script>
+  {% else %}
+  <script src="{{ static_href('inventory_qty_parse.js') }}" defer></script>
+  <script src="{{ static_href('field_form.js') }}" defer></script>
+  {% endif %}
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,9 @@
+[
+  {
+    "bundle_code": "2301",
+    "name": "Latte",
+    "components": [
+      {"product_code": "coffee-1", "quantity_per_unit": "30"}
+    ]
+  }
+]

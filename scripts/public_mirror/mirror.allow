@@ -1,0 +1,50 @@
+# Public mirror allowlist (default deny).
+# Paths are repo-relative with `/`. Deny file wins over allow.
+# Build: uv run python scripts/build_public_mirror.py --out ../mk_service_bot-public --force
+
+# Application code
+src/**
+
+# Tests (live suites narrowed in mirror.deny)
+tests/**
+
+# Container / compose
+docker/**
+Dockerfile
+Dockerfile.visit-photo-grouping
+docker-compose.yml
+docker-compose.dev.yml
+docker-compose.e2e.yml
+docker-compose.prod.yml
+docker-compose.regression.yml
+
+# Entrypoints and lockfiles
+api.py
+run.py
+run_daily_sales_demand_worker.py
+run_effects_worker.py
+run_event_reminders_worker.py
+run_machine_pnl_month_worker.py
+run_matrix_worker.py
+run_sales_monitoring_worker.py
+run_service_visits_worker.py
+run_visit_photo_grouping_worker.py
+pyproject.toml
+uv.lock
+.python-version
+.gitignore
+.dockerignore
+sgconfig.yml
+
+# Structural lint corpus (code constraints, not ops docs)
+structural-rules/**
+structural-rule-tests/**
+
+# Sanitized account examples (overlaid when overlays exist)
+kitvending_accounts.example.json
+kit_platform_accounts.example.json
+
+# Mirror tooling itself (so the public tree can rebuild policy from source)
+scripts/build_public_mirror.py
+scripts/public_mirror_lib/**
+scripts/public_mirror/**

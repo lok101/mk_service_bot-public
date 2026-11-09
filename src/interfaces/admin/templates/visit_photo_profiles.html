@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Профили фото{% endblock %}
+{% block page_title %}Профили фото{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    <a class="admin-entity-link" href="/admin/visit-photo-review">← Разбор фото</a>
+  </p>
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p class="admin-hint">
+    <a class="admin-btn" href="/admin/visit-photo-profiles/new">Добавить</a>
+  </p>
+
+  <div class="admin-table-wrap">
+    <table class="admin-roster" id="visit-photo-profiles-table">
+      <thead>
+        <tr>
+          <th scope="col">Название</th>
+          <th scope="col">Членов</th>
+          <th scope="col">Кадров</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+        <tr>
+          <td>
+            <a class="admin-entity-link"
+               href="/admin/visit-photo-profiles/{{ profile.profile_id }}">{{ profile.name }}</a>
+          </td>
+          <td>{{ profile.members|length }}</td>
+          <td>{{ profile.photo_count }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="3">Нет профилей</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

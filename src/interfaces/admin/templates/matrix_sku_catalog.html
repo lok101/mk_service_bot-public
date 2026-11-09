@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}SKU матрицы{% endblock %}
+{% block page_title %}SKU матрицы{% endblock %}
+{% block body %}
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  <p class="admin-hint">
+    Строки — снековые папки МойСклад. Пустая ёмкость сохраняется как 0;
+    Kit/build требует ёмкость &gt; 0.
+  </p>
+
+  <div class="admin-filters" id="matrix-sku-filters" aria-label="Фильтр статуса МС">
+    <label>Статус
+      <select id="matrix-sku-archived-filter">
+        <option value="active" selected>✅ не в архиве</option>
+        <option value="archived">❌ архив</option>
+        <option value="all">Все</option>
+      </select>
+    </label>
+  </div>
+
+  <form method="post" action="/admin/matrix-sku-catalog">
+    <input type="hidden" name="action" value="bulk_save">
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="matrix-sku-catalog-table">
+        <thead>
+          <tr>
+            <th scope="col" class="admin-sku-status-col"></th>
+            <th scope="col">Код</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Ёмкость</th>
+            <th scope="col">Множитель</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr class="{% if row.needs_capacity_highlight %}admin-sku-row-needs-capacity{% endif %}"
+              data-product-code="{{ row.product_code }}"
+              data-archived="{{ row.is_archived|lower }}">
+            <td class="admin-sku-status-col">{% if row.is_archived %}❌{% else %}✅{% endif %}</td>
+            <td>
+              <input class="admin-cell-input" name="product_code" value="{{ row.product_code }}" readonly>
+            </td>
+            <td>
+              <input class="admin-cell-input" name="display_name" value="{{ row.display_name }}" required>
+            </td>
+            <td>
+              <input class="admin-cell-input" name="capacity" type="number" min="0" step="1"
+                     value="{{ '' if row.capacity is none else row.capacity }}">
+            </td>
+            <td>
+              <input class="admin-cell-input" name="product_multiplier" value="{{ row.product_multiplier }}" required>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">Нет записей</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('matrix_sku_catalog.js') }}" defer></script>
+{% endblock %}

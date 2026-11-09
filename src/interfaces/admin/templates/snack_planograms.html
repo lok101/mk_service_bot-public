@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Снеки{% endblock %}
+{% block page_title %}Снеки{% endblock %}
+{% block body %}
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin">
+      <div class="admin-filters">
+        <label>Поиск
+          <input type="search" id="snack-planograms-search" autocomplete="off">
+        </label>
+        <p class="admin-muted">Показано
+          <span id="snack-planograms-visible-count">{{ rows|length }}</span>
+          из <span id="snack-planograms-total-count">{{ rows|length }}</span></p>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="snack-planograms-table">
+        <thead>
+          <tr>
+            <th scope="col" class="sortable" data-sort-key="code">Код</th>
+            <th scope="col" class="sortable" data-sort-key="name">Имя</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr data-code="{{ row.machine_id }}" data-name="{{ row.display_name }}">
+            <td>
+              <a href="/admin/snack-planograms/{{ row.machine_id }}">{{ row.machine_id }}</a>
+            </td>
+            <td>
+              <a href="/admin/snack-planograms/{{ row.machine_id }}">{{ row.display_name }}</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="2" class="admin-muted">Снековых аппаратов в парке нет.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('snack_planograms.js') }}" defer></script>
+{% endblock %}

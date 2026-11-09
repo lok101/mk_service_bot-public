@@ -1,0 +1,54 @@
+name: mk-service-bot-dev
+
+services:
+  app:
+    env_file: !override
+      - .env.dev
+    ports:
+      - "8001:8000"
+    environment:
+      ENVIRONMENT: dev
+
+  effects-worker:
+    env_file: !override
+      - .env.dev
+
+  matrix-worker:
+    env_file: !override
+      - .env.dev
+
+  sales-monitoring-worker:
+    env_file: !override
+      - .env.dev
+
+  daily-sales-demand-worker:
+    env_file: !override
+      - .env.dev
+
+  machine-pnl-month-worker:
+    env_file: !override
+      - .env.dev
+
+  service-visits-worker:
+    env_file: !override
+      - .env.dev
+
+  event-reminders-worker:
+    env_file: !override
+      - .env.dev
+
+  visit-photo-grouping-worker:
+    env_file: !override
+      - .env.dev
+
+  mongo:
+    volumes:
+      - mongo_data_dev:/data/db
+
+  redis:
+    volumes:
+      - redis_data_dev:/data
+
+volumes:
+  mongo_data_dev:
+  redis_data_dev:

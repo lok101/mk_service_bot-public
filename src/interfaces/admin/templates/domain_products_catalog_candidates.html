@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Кандидаты каталога{% endblock %}
+{% block page_title %}Кандидаты каталога{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/domain-products">← Товары</a></p>
+  {% if catalog_fetched_at %}
+  <p id="catalog-fetched-at">{{ catalog_fetched_at }}</p>
+  {% endif %}
+  {% if catalog_sync_error %}
+  <p id="catalog-sync-error" class="admin-error">{{ catalog_sync_error }}</p>
+  {% endif %}
+  {% if catalog_refresh_enabled %}
+  <form class="admin-inline-form" method="post" action="/admin/domain-products/catalog-candidates">
+    <button type="submit" name="action" value="refresh-catalog">Обновить каталог</button>
+  </form>
+  {% else %}
+  <p class="admin-hint">Обновление из МойСклада не настроено</p>
+  {% endif %}
+
+  {% if empty_selection_hint %}
+  <p class="admin-hint">{{ empty_selection_hint }}</p>
+  {% endif %}
+  {% if import_result %}
+  <p class="admin-hint">Создано: {{ import_result.created }}. Без изменений: {{ import_result.unchanged }}.</p>
+  {% if import_result.failure_lines %}
+  <ul class="admin-hint">
+    {% for line in import_result.failure_lines %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+
+  <form method="post" action="/admin/domain-products/catalog-candidates" id="catalog-candidates-form">
+    <input type="hidden" name="action" value="import">
+    <p class="admin-hint">
+      <button type="button" id="catalog-candidates-select-visible">Выбрать все видимые</button>
+      <button type="submit">Импортировать</button>
+    </p>
+
+    <div class="admin-roster-chrome">
+      <div class="admin-roster-chrome-pin">
+        <div class="admin-filters">
+          <label>Поиск
+            <input type="search" id="catalog-candidates-search" autocomplete="off">
+          </label>
+          <p class="admin-muted">Показано
+            <span id="catalog-candidates-visible-count">{{ candidates|length }}</span>
+            из <span id="catalog-candidates-total-count">{{ candidates|length }}</span></p>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-roster" id="catalog-candidates-table">
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col" class="sortable" data-sort-key="name">Название</th>
+              <th scope="col" class="sortable" data-sort-key="code">Код</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in candidates %}
+            <tr data-name="{{ row.name }}" data-code="{{ row.code }}">
+              <td>
+                <input type="checkbox" name="code" value="{{ row.code }}">
+              </td>
+              <td>{{ row.name }}{% if row.archived %} <span class="admin-muted">архив</span>{% endif %}</td>
+              <td>{{ row.code }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="3">Нет кандидатов</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('domain_products_catalog_candidates.js') }}" defer></script>
+{% endblock %}

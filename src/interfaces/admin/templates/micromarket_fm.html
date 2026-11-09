@@ -1,0 +1,29 @@
+{% from "_admin_save_bar.html" import admin_save_bar %}
+  <p class="admin-muted">{{ display_name }}</p>
+
+  {% if admin_error %}
+  <div class="admin-hint admin-user-error" role="alert">
+    <p class="admin-error-cause">{{ admin_error.cause }}</p>
+    <p class="admin-error-action">{{ admin_error.action }}</p>
+    <p class="admin-error-code">{{ admin_error.code }}</p>
+  </div>
+  {% elif message %}
+  <p class="admin-hint">{{ message }}</p>
+  {% endif %}
+
+  <p class="admin-hint">
+    Форс-мажор: принять буфер ордера загрузки на полку и закрыть ордер без пересчёта.
+  </p>
+
+  <form id="micromarket-ops-accept-form"
+        method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-loading/ops-accept"></form>
+
+  {% call admin_save_bar() %}
+      <button type="submit"
+              form="micromarket-ops-accept-form"
+              class="admin-btn"
+              {% if not ops_accept_enabled %}disabled{% endif %}>
+        Подтвердить загрузку без пересчёта
+      </button>
+  {% endcall %}

@@ -1,0 +1,14 @@
+id: no-redis-outside-infra
+language: python
+severity: error
+message: redis belongs in infrastructure.
+files:
+  - src/application/**/*.py
+  - src/domain/**/*.py
+  - src/interfaces/**/*.py
+rule:
+  any:
+    - pattern: import redis
+    - pattern: import redis as $$$
+    - pattern: from redis import $$$
+    - pattern: from redis.$$$ import $$$

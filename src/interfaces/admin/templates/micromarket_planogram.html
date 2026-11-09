@@ -1,0 +1,435 @@
+{% from "_admin_save_bar.html" import admin_save_bar %}
+  <form method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-planogram/publish"
+        id="micromarket-planogram-publish-form"
+        data-publish-fetch
+        hidden></form>
+  {% if shop_list_error %}
+  <p class="admin-error">{{ shop_list_error }}</p>
+  {% endif %}
+  <p id="micromarket-planogram-publish-error" class="admin-error" hidden></p>
+  <form method="post"
+        action="/admin/machines/{{ machine.machine_id.value }}/micromarket-planogram/copy"
+        class="admin-layout-copy-form"
+        id="micromarket-planogram-copy-form">
+    <label>
+      Скопировать планограмму с
+      <select name="source_machine_id">
+        <option value="">—</option>
+        {% for source_id, source_label in planogram_copy_sources %}
+        <option value="{{ source_id }}">{{ source_label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Копировать</button>
+  </form>
+
+  <p class="admin-hint">
+    Коэффициент аппарата:
+    <strong>{{ machine_price_multiplier_display }}</strong>
+    <form method="post"
+          action="/admin/machines/{{ machine.machine_id.value }}/micromarket-planogram/reset-prices"
+          style="display:inline">
+      <button type="submit">Сбросить все цены</button>
+    </form>
+  </p>
+
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+  {% if notice %}
+  <p class="admin-hint">{{ notice }}</p>
+  {% endif %}
+  {% if kit_groups_error %}
+  <p class="admin-error">{{ kit_groups_error }}</p>
+  {% endif %}
+  {% if kit_groups_warning %}
+  <p class="admin-hint">{{ kit_groups_warning }}</p>
+  {% endif %}
+
+  <script type="application/json" id="planogram-domain-product-options">{{ planogram_product_options_json | safe }}</script>
+  <script type="application/json" id="planogram-last-buy-prices">{{ planogram_last_buy_prices_json | safe }}</script>
+
+  <form method="post" action="/admin/machines/{{ machine.machine_id.value }}/micromarket-planogram"
+        id="micromarket-planogram-form">
+    {% set ns = namespace(row_idx=0) %}
+    <template id="planogram-shelf-template">
+      <section class="planogram-shelf" data-kit-group-id="">
+        <input type="hidden" name="shelf_kit_group_id-0" value="">
+        <header class="planogram-shelf-header">
+          <button type="button" class="planogram-drag-handle" aria-label="Переставить полку">⠿</button>
+          <span class="planogram-shelf-label"></span>
+          <button type="button" class="planogram-shelf-collapse" aria-expanded="true"
+                  aria-label="Свернуть полку">▾</button>
+          <button type="button" class="planogram-shelf-clear" aria-label="Снять полку">Снять</button>
+        </header>
+        <div class="planogram-shelf-body">
+          <div class="admin-table-wrap">
+            <table class="admin-roster planogram-shelf-table">
+              <colgroup>
+                <col class="planogram-col-product">
+                <col class="planogram-col-target">
+                <col class="planogram-col-stock">
+                <col class="planogram-col-buy">
+                <col class="planogram-col-price">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Товар</th>
+                  <th scope="col">Вместимость</th>
+                  <th scope="col">Остатки</th>
+                  <th scope="col">Закуп</th>
+                  <th scope="col">Цена</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </template>
+    <div id="micromarket-planogram-shelves">
+      {% for shelf in shelf_blocks %}
+      <section class="planogram-shelf" data-kit-group-id="{{ shelf.kit_group_id }}">
+        <input type="hidden" name="shelf_kit_group_id-{{ shelf.form_index }}" value="{{ shelf.kit_group_id }}">
+        <header class="planogram-shelf-header">
+          <button type="button" class="planogram-drag-handle" aria-label="Переставить полку">⠿</button>
+          <span class="planogram-shelf-label">{{ shelf.label }}</span>
+          <button type="button" class="planogram-shelf-collapse" aria-expanded="true"
+                  aria-label="Свернуть полку">▾</button>
+          <button type="button" class="planogram-shelf-clear" aria-label="Снять полку"
+                  {% if shelf.rows %}disabled{% endif %}>Снять</button>
+        </header>
+        <div class="planogram-shelf-body">
+          <div class="admin-table-wrap">
+            <table class="admin-roster planogram-shelf-table">
+              <colgroup>
+                <col class="planogram-col-product">
+                <col class="planogram-col-target">
+                <col class="planogram-col-stock">
+                <col class="planogram-col-buy">
+                <col class="planogram-col-price">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Товар</th>
+                  <th scope="col">Вместимость</th>
+                  <th scope="col">Остатки</th>
+                  <th scope="col">Закуп</th>
+                  <th scope="col">Цена</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in shelf.rows %}
+                {% set idx = ns.row_idx %}
+                {% set ns.row_idx = ns.row_idx + 1 %}
+                <tr data-persisted="1"{% if row.unlinked or row.pending_exit %} class="{% if row.unlinked %}planogram-product-unlinked{% endif %}{% if row.unlinked and row.pending_exit %} {% endif %}{% if row.pending_exit %}planogram-pending-exit{% endif %}"{% endif %}>
+                  <td>
+                    {% if row.missing_product %}
+                    <div class="planogram-product-picker" data-unlinked="true">
+                      <input type="search"
+                             class="planogram-product-search admin-cell-input"
+                             placeholder="Название товара…"
+                             autocomplete="off"
+                             aria-label="Поиск товара"
+                             aria-autocomplete="list"
+                             hidden>
+                      <span class="planogram-product-selected">
+                        <span class="planogram-product-legacy">Товар не найден</span>
+                      </span>
+                      <button type="button"
+                              class="planogram-product-clear"
+                              aria-label="Убрать товар">✕</button>
+                      <button type="button"
+                              class="planogram-product-move"
+                              aria-label="Перенести на полку">↓</button>
+                      <input type="hidden"
+                             class="planogram-domain-product-id"
+                             name="domain_product_id-{{ idx }}"
+                             value="{{ row.domain_product_id }}">
+                      <input type="hidden"
+                             class="planogram-legacy-product-code"
+                             name="product_code-{{ idx }}"
+                             value="">
+                      <ul class="planogram-product-options" hidden role="listbox"></ul>
+                    </div>
+                    {% else %}
+                    {% with
+                        domain_product_id=row.domain_product_id,
+                        product_name=row.product_name,
+                        linked=row.linked,
+                        code_input_name="product_code-" ~ idx,
+                        id_input_name="domain_product_id-" ~ idx,
+                        product_number=row.product_number,
+                        legacy_code=row.legacy_code,
+                        legacy_label=row.legacy_label
+                    %}
+                      {% include "_planogram_product_picker.html" %}
+                    {% endwith %}
+                    {% endif %}
+                    <input type="hidden" name="pending_exit-{{ idx }}"
+                           value="{% if row.pending_exit %}1{% endif %}">
+                    <input type="hidden" class="planogram-kit-group-id"
+                           name="kit_group_id-{{ idx }}"
+                           value="{{ row.kit_group_id if row.kit_group_id is not none else '' }}">
+                    {% if not kit_groups_error %}
+                    <select class="admin-cell-input planogram-move-shelf planogram-move-shelf-menu"
+                            aria-label="Перенести на полку">
+                      <option value="">Перенести…</option>
+                      {% for option in shelf_select_options %}
+                      <option value="{{ option.kit_group_id }}"
+                        {% if option.kit_group_id == row.kit_group_id %}hidden{% endif %}>
+                        {{ option.label }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                    {% endif %}
+                  </td>
+                  <td class="admin-qty-cell">
+                    {% with name="target_qty-" ~ idx, value=row.target_qty, min=0, max=50,
+                            aria_label="target_qty", input_class="admin-cell-input", integer=true %}
+                      {% include "_admin_quantity_stepper.html" %}
+                    {% endwith %}
+                  </td>
+                  <td class="planogram-stock-qty">{{ row.stock_qty_display }}</td>
+                  <td class="planogram-buy-price">{{ row.last_buy_display }}</td>
+                  {% with price_rub=row.price_rub, price_origin=row.price_origin,
+                          legacy_code=row.legacy_code, domain_product_id=row.domain_product_id,
+                          domain_price_display=row.domain_price_display %}
+                    {% include "_planogram_price_rub_cell.html" %}
+                  {% endwith %}
+                </tr>
+                {% endfor %}
+                {% set row = empty_enroll_row %}
+                {% set idx = ns.row_idx %}
+                {% set ns.row_idx = ns.row_idx + 1 %}
+                <tr class="planogram-enroll-row">
+                  <td>
+                    {% with
+                        domain_product_id=row.domain_product_id,
+                        product_name=row.product_name,
+                        linked=row.linked,
+                        code_input_name="product_code-" ~ idx,
+                        id_input_name="domain_product_id-" ~ idx,
+                        product_number=row.product_number,
+                        legacy_code=row.legacy_code,
+                        legacy_label=row.legacy_label
+                    %}
+                      {% include "_planogram_product_picker.html" %}
+                    {% endwith %}
+                    <input type="hidden" name="pending_exit-{{ idx }}" value="">
+                    <input type="hidden" class="planogram-kit-group-id"
+                           name="kit_group_id-{{ idx }}"
+                           value="{{ shelf.kit_group_id }}">
+                    {% if not kit_groups_error %}
+                    <select class="admin-cell-input planogram-move-shelf planogram-move-shelf-menu"
+                            aria-label="Перенести на полку">
+                      <option value="">Перенести…</option>
+                      {% for option in shelf_select_options %}
+                      <option value="{{ option.kit_group_id }}"
+                        {% if option.kit_group_id == shelf.kit_group_id %}hidden{% endif %}>
+                        {{ option.label }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                    {% endif %}
+                  </td>
+                  <td class="admin-qty-cell">
+                    {% with name="target_qty-" ~ idx, value=row.target_qty, min=0, max=50,
+                            aria_label="target_qty", input_class="admin-cell-input", integer=true %}
+                      {% include "_admin_quantity_stepper.html" %}
+                    {% endwith %}
+                  </td>
+                  <td class="planogram-stock-qty">{{ row.stock_qty_display }}</td>
+                  <td class="planogram-buy-price">{{ row.last_buy_display }}</td>
+                  {% with price_rub=row.price_rub %}
+                    {% include "_planogram_price_rub_cell.html" %}
+                  {% endwith %}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {% endfor %}
+
+      {% if ungrouped_rows or not shelf_blocks %}
+      <section class="planogram-shelf planogram-ungrouped" data-ungrouped="true">
+        <header class="planogram-shelf-header">
+          <span class="planogram-shelf-label">{{ ungrouped_label }}</span>
+        </header>
+        <div class="admin-table-wrap">
+          <table class="admin-roster planogram-shelf-table">
+            <colgroup>
+              <col class="planogram-col-product">
+              <col class="planogram-col-target">
+              <col class="planogram-col-stock">
+              <col class="planogram-col-buy">
+              <col class="planogram-col-price">
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Товар</th>
+                <th scope="col">Вместимость</th>
+                <th scope="col">Остатки</th>
+                <th scope="col">Закуп</th>
+                <th scope="col">Цена</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in ungrouped_rows %}
+              {% set idx = ns.row_idx %}
+              {% set ns.row_idx = ns.row_idx + 1 %}
+              <tr data-persisted="1"{% if row.unlinked or row.pending_exit %} class="{% if row.unlinked %}planogram-product-unlinked{% endif %}{% if row.unlinked and row.pending_exit %} {% endif %}{% if row.pending_exit %}planogram-pending-exit{% endif %}"{% endif %}>
+                <td>
+                  {% if row.missing_product %}
+                  <div class="planogram-product-picker" data-unlinked="true">
+                    <input type="search"
+                           class="planogram-product-search admin-cell-input"
+                           placeholder="Название товара…"
+                           autocomplete="off"
+                           aria-label="Поиск товара"
+                           aria-autocomplete="list"
+                           hidden>
+                    <span class="planogram-product-selected">
+                      <span class="planogram-product-legacy">Товар не найден</span>
+                    </span>
+                    <button type="button"
+                            class="planogram-product-clear"
+                            aria-label="Убрать товар">✕</button>
+                    <button type="button"
+                            class="planogram-product-move"
+                            aria-label="Перенести на полку">↓</button>
+                    <input type="hidden"
+                           class="planogram-domain-product-id"
+                           name="domain_product_id-{{ idx }}"
+                           value="{{ row.domain_product_id }}">
+                    <input type="hidden"
+                           class="planogram-legacy-product-code"
+                           name="product_code-{{ idx }}"
+                           value="">
+                    <ul class="planogram-product-options" hidden role="listbox"></ul>
+                  </div>
+                  {% else %}
+                  {% with
+                      domain_product_id=row.domain_product_id,
+                      product_name=row.product_name,
+                      linked=row.linked,
+                      code_input_name="product_code-" ~ idx,
+                      id_input_name="domain_product_id-" ~ idx,
+                      product_number=row.product_number,
+                      legacy_code=row.legacy_code,
+                      legacy_label=row.legacy_label
+                  %}
+                    {% include "_planogram_product_picker.html" %}
+                  {% endwith %}
+                  {% endif %}
+                  <input type="hidden" name="pending_exit-{{ idx }}"
+                         value="{% if row.pending_exit %}1{% endif %}">
+                  <input type="hidden" class="planogram-kit-group-id"
+                         name="kit_group_id-{{ idx }}"
+                         value="{{ row.kit_group_id if row.kit_group_id is not none else '' }}">
+                  {% if not kit_groups_error %}
+                  <select class="admin-cell-input planogram-move-shelf planogram-move-shelf-menu"
+                          aria-label="Перенести на полку">
+                    <option value="">Перенести…</option>
+                    {% for option in shelf_select_options %}
+                    <option value="{{ option.kit_group_id }}"
+                      {% if option.kit_group_id == row.kit_group_id %}hidden{% endif %}>
+                      {{ option.label }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                  {% endif %}
+                </td>
+                <td class="admin-qty-cell">
+                  {% with name="target_qty-" ~ idx, value=row.target_qty, min=0, max=50,
+                          aria_label="target_qty", input_class="admin-cell-input", integer=true %}
+                    {% include "_admin_quantity_stepper.html" %}
+                  {% endwith %}
+                </td>
+                <td class="planogram-stock-qty">{{ row.stock_qty_display }}</td>
+                <td class="planogram-buy-price">{{ row.last_buy_display }}</td>
+                {% with price_rub=row.price_rub, price_origin=row.price_origin,
+                        legacy_code=row.legacy_code, domain_product_id=row.domain_product_id,
+                        domain_price_display=row.domain_price_display %}
+                  {% include "_planogram_price_rub_cell.html" %}
+                {% endwith %}
+              </tr>
+              {% endfor %}
+              {% if not shelf_blocks %}
+              {% set row = empty_enroll_row %}
+              {% set idx = ns.row_idx %}
+              {% set ns.row_idx = ns.row_idx + 1 %}
+              <tr class="planogram-enroll-row">
+                <td>
+                  {% with
+                      domain_product_id=row.domain_product_id,
+                      product_name=row.product_name,
+                      linked=row.linked,
+                      code_input_name="product_code-" ~ idx,
+                      id_input_name="domain_product_id-" ~ idx,
+                      product_number=row.product_number,
+                      legacy_code=row.legacy_code,
+                      legacy_label=row.legacy_label
+                  %}
+                    {% include "_planogram_product_picker.html" %}
+                  {% endwith %}
+                  <input type="hidden" name="pending_exit-{{ idx }}" value="">
+                  <input type="hidden" class="planogram-kit-group-id"
+                         name="kit_group_id-{{ idx }}" value="">
+                  {% if not kit_groups_error %}
+                  <select class="admin-cell-input planogram-move-shelf planogram-move-shelf-menu"
+                          aria-label="Перенести на полку">
+                    <option value="">Перенести…</option>
+                    {% for option in shelf_select_options %}
+                    <option value="{{ option.kit_group_id }}">{{ option.label }}</option>
+                    {% endfor %}
+                  </select>
+                  {% endif %}
+                </td>
+                <td class="admin-qty-cell">
+                  {% with name="target_qty-" ~ idx, value=row.target_qty, min=0, max=50,
+                          aria_label="target_qty", input_class="admin-cell-input", integer=true %}
+                    {% include "_admin_quantity_stepper.html" %}
+                  {% endwith %}
+                </td>
+                <td class="planogram-stock-qty">{{ row.stock_qty_display }}</td>
+                <td class="planogram-buy-price">{{ row.last_buy_display }}</td>
+                {% with price_rub=row.price_rub %}
+                  {% include "_planogram_price_rub_cell.html" %}
+                {% endwith %}
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    {% call admin_save_bar(split=true) %}
+        <button type="submit"
+                form="micromarket-planogram-publish-form"
+                id="micromarket-planogram-publish-button"
+                {% if shop_list_publishing or shop_list_published %}disabled{% endif %}>
+          {% if shop_list_published %}опубликовано{% elif shop_list_publishing %}Задача выполняется{% else %}Опубликовать{% endif %}
+        </button>
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+    <div class="planogram-scroll-spacer" aria-hidden="true"></div>
+  </form>
+{% for shelf in shelf_blocks %}
+{% for row in shelf.rows %}
+{% set reset_code = row.legacy_code or row.domain_product_id %}
+{% if row.price_origin == 'manual' and reset_code %}
+<form id="micromarket-reset-price-{{ reset_code }}" method="post"
+      action="/admin/machines/{{ machine.machine_id.value }}/micromarket-planogram/reset-price" hidden></form>
+{% endif %}
+{% endfor %}
+{% endfor %}
+<script src="{{ static_href('admin_quantity_stepper.js') }}" defer></script>
+<script src="{{ static_href('planogram_product_picker.js') }}" defer></script>
+<script src="{{ static_href('micromarket_planogram_sort_key.js') }}" defer></script>
+<script src="{{ static_href('micromarket_planogram_table.js') }}" defer></script>
+<script src="{{ static_href('micromarket_planogram_publish.js') }}" defer></script>

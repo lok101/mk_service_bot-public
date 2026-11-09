@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Товары{% endblock %}
+{% block page_title %}Товары{% endblock %}
+{% block body %}
+  <p class="admin-hint">
+    <a class="admin-btn" href="/admin/domain-products/new">Добавить</a>
+    <form class="admin-inline-form" method="post" action="/admin/domain-products/import" enctype="multipart/form-data">
+      <label class="admin-btn">Импорт
+        <input type="file" name="file" accept=".csv,.xls,.xlsx" hidden onchange="this.form.submit()">
+      </label>
+    </form>
+    <a class="admin-btn" href="/admin/domain-products/catalog-candidates">Кандидаты каталога</a>
+  </p>
+  {% if import_result %}
+  <p class="admin-hint">Создано: {{ import_result.created }}. Связано: {{ import_result.linked }}. Без изменений: {{ import_result.unchanged }}.</p>
+  {% if import_result.failure_lines %}
+  <ul class="admin-hint">
+    {% for line in import_result.failure_lines %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+
+  <div class="admin-roster-chrome">
+    <div class="admin-roster-chrome-pin">
+      <div class="admin-filters">
+        <label>Поиск
+          <input type="search" id="domain-products-search" autocomplete="off">
+        </label>
+        <label>Состояние
+          <select id="domain-products-state-filter">
+            <option value="all">все</option>
+            <option value="нет связи">нет связи</option>
+            <option value="связана">связана</option>
+            <option value="архив">архив</option>
+            <option value="порвана">порвана</option>
+          </select>
+        </label>
+        <p class="admin-muted">Показано
+          <span id="domain-products-visible-count">{{ rows|length }}</span>
+          из <span id="domain-products-total-count">{{ rows|length }}</span></p>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="domain-products-table">
+        <thead>
+          <tr>
+            <th scope="col" class="sortable" data-sort-key="name">Название</th>
+            <th scope="col">Номер</th>
+            <th scope="col">Код карточки</th>
+            <th scope="col">Имя из снимка</th>
+            <th scope="col" class="sortable" data-sort-key="state">Состояние</th>
+            {% if procurement_mirror_enabled %}
+            <th scope="col" class="sortable" data-sort-key="supplier">Поставщик</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr
+            data-name="{{ row.name }}"
+            data-number="{{ row.number }}"
+            data-catalog-code="{{ row.catalog_code or '' }}"
+            data-catalog-name="{{ row.catalog_name or '' }}"
+            data-state="{{ row.state }}"
+            {% if procurement_mirror_enabled %}data-supplier="{{ row.supplier_display }}"{% endif %}
+          >
+            <td>
+              <a href="/admin/domain-products/{{ row.domain_product_id }}">{{ row.name }}</a>
+            </td>
+            <td>{{ row.number }}</td>
+            <td>{{ row.catalog_code or "" }}</td>
+            <td>{{ row.catalog_name or "" }}</td>
+            <td>{{ row.state }}</td>
+            {% if procurement_mirror_enabled %}
+            <td>{{ row.supplier_display }}</td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="{% if procurement_mirror_enabled %}6{% else %}5{% endif %}">Нет товаров</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('domain_products.js') }}" defer></script>
+{% endblock %}

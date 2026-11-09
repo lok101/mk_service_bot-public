@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Инциденты{% endblock %}
+{% block page_title %}Инциденты «нет продаж»{% endblock %}
+{% block body %}
+  {% if not engineer_rows and not problem_rows and not muted_rows %}
+  <p class="admin-muted">Открытых инцидентов нет.</p>
+  {% else %}
+  <div class="admin-roster-chrome machine-incidents-board">
+    <div class="admin-roster-chrome-pin" id="incident-live-chrome-pin">
+      <div class="admin-filters" id="incident-live-filters">
+        <label>Поиск
+          <input type="search"
+                 id="incident-live-search"
+                 placeholder="код или имя"
+                 autocomplete="off">
+        </label>
+        <label>Заметка
+          <select id="incident-live-note-filter">
+            <option value="all">Все</option>
+            {% for choice in note_choices %}
+            <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Причина
+          <select id="incident-live-reason-filter">
+            <option value="all">Все</option>
+            {% for choice in reason_choices %}
+            <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <p class="admin-muted">Показано
+          <span id="incident-live-visible-count">{{ row_count }}</span>
+          из <span id="incident-live-total-count">{{ row_count }}</span></p>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-roster" id="incident-live-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort-key="machine-id" scope="col">Код</th>
+            <th class="sortable" data-sort-key="name" scope="col">Имя</th>
+            <th class="sortable" data-sort-key="note" scope="col">Заметка</th>
+            <th class="sortable" data-sort-key="reason" scope="col">Причина</th>
+            <th scope="col">Действия</th>
+          </tr>
+        </thead>
+        {% macro incident_group(rows, label, actions) %}
+        {% if rows %}
+        <tbody data-incident-group="{{ label }}">
+          <tr class="machine-incidents-break">
+            <th colspan="5" scope="rowgroup">{{ label }}</th>
+          </tr>
+          {% for row in rows %}
+          <tr
+            data-machine-id="{{ row.machine_id }}"
+            data-name="{{ row.name }}"
+            data-note="{{ row.note }}"
+            data-reason="{{ row.reason }}"
+          >
+            <th scope="row">{{ row.machine_id }}</th>
+            <td>{{ row.name }}</td>
+            <td>{{ row.note }}</td>
+            <td>{{ row.reason }}</td>
+            <td class="admin-row-actions">
+              {% if actions == 'muted' %}
+              <form method="post" action="/admin/machine-incidents/{{ row.machine_id }}/mute-cancel">
+                <button type="submit">Снять глушение</button>
+              </form>
+              {% else %}
+              <form method="post" action="/admin/machine-incidents/{{ row.machine_id }}/mute">
+                <button type="submit">Глушить</button>
+              </form>
+              {% if actions == 'problem' %}
+              <form method="post" action="/admin/machine-incidents/{{ row.machine_id }}/engineer-wait">
+                <button type="submit">Инженер</button>
+              </form>
+              {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% endif %}
+        {% endmacro %}
+        {{ incident_group(engineer_rows, "Ожидание инженера", "engineer") }}
+        {{ incident_group(problem_rows, "Проблемные", "problem") }}
+        {{ incident_group(muted_rows, "Глушение", "muted") }}
+      </table>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  <script src="{{ static_href('machine-incidents.js') }}" defer></script>
+{% endblock %}

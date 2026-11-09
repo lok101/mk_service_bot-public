@@ -1,0 +1,8 @@
+id: no-httpx-outside-infra
+valid:
+  - "import os"
+invalid:
+  - "import httpx"
+  - "import httpx as http"
+  - "from httpx import Client"
+  - "from httpx._client import Client"

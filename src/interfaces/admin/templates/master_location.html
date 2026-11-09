@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_admin_save_bar.html" import admin_save_bar %}
+{% block title %}Точка {{ location.location_id }}{% endblock %}
+{% block page_title %}Точка {{ location.location_id }}{% endblock %}
+{% block body %}
+  <p class="admin-hint"><a href="/admin/machines">← Парк</a></p>
+
+  {% if error %}
+  <p class="admin-error">{{ error }}</p>
+  {% endif %}
+
+  {% if location.show_legacy_hint %}
+  <p class="admin-hint">Текущее имя: {{ location.legacy_display_name }}</p>
+  {% endif %}
+
+  <form method="post" action="/admin/locations/{{ location.location_id }}" id="master-location-form">
+    <label>Название
+      <input name="name" required value="{{ location.name }}">
+    </label>
+    <label>Город
+      <input name="city" required value="{{ location.city }}">
+    </label>
+    <label>Улица
+      <input name="street" required value="{{ location.street }}">
+    </label>
+    <label>Дом
+      <input name="house" required value="{{ location.house }}">
+    </label>
+    <label>Широта
+      <input name="latitude" value="{{ location.latitude }}">
+    </label>
+    <label>Долгота
+      <input name="longitude" value="{{ location.longitude }}">
+    </label>
+    {% call admin_save_bar() %}
+        <button type="submit">Сохранить</button>
+    {% endcall %}
+  </form>
+{% endblock %}

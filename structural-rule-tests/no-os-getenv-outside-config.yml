@@ -1,0 +1,7 @@
+id: no-os-getenv-outside-config
+valid:
+  - "import os"
+  - "x = settings.bot_token"
+invalid:
+  - "os.getenv('BOT_TOKEN')"
+  - "raw = os.getenv(\"X\")"
