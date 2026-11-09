@@ -44,3 +44,8 @@ docker/e2e/google-forms-user-oauth.json
 
 # Backup unit files are ops-specific
 docker/mongo-backup/**
+
+# Identity / private-process test residue (org slug, CODEOWNERS, tracker URLs)
+tests/scripts/fixtures/tracker_import_sample.json
+tests/scripts/agent_contract_guard_tests/**
+tests/docs/**

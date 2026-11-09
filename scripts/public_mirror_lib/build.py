@@ -76,6 +76,18 @@ def plan_mirror(
 
 
 @beartype
+def _clear_mirror_tree(out_dir: Path) -> None:
+    """Remove mirror contents but keep `.git` so remotes/history survive --force."""
+    for child in out_dir.iterdir():
+        if child.name == ".git":
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink(missing_ok=True)
+
+
+@beartype
 def apply_overlays(
     *,
     overlays_dir: Path,
@@ -134,7 +146,7 @@ def build_mirror(
         )
 
     if out_dir.exists() and force:
-        shutil.rmtree(out_dir)
+        _clear_mirror_tree(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     for rel in plan.copy_paths:

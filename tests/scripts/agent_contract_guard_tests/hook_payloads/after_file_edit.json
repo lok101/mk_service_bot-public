@@ -1,8 +1,0 @@
-{
-  "conversation_id": "conv-1",
-  "generation_id": "gen-1",
-  "hook_event_name": "afterFileEdit",
-  "workspace_roots": ["/repo"],
-  "file_path": "/repo/src/allowed.py",
-  "edits": [{"old_string": "old", "new_string": "new"}]
-}
